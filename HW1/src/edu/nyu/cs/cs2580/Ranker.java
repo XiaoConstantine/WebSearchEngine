@@ -59,15 +59,13 @@ class Ranker {
     }
     double score = 0.0;
 	if(ranker_type.equals("cosine")){
-       //System.out.println("cosine");
 	   score = vectorSpaceModel(qv, did);
 	   return new ScoredDocument(did, d.get_title_string(), score);
 	}else if(ranker_type.equals("QL")){
-       System.out.println("QL");
 	   score = languageModel(qv, did);
 	   return new ScoredDocument(did, d.get_title_string(), score);
 	}else if(ranker_type.equals("phrase")){
-       System.out.println("phrase");
+	   score = phraseRanker(qv, did);
        return new ScoredDocument(did, d.get_title_string(), score);
 	}else if(ranker_type.equals("linear")){
        System.out.println("linear");
@@ -85,10 +83,10 @@ class Ranker {
    */
     
   public double vectorSpaceModel(Vector < String > qv, int did){
-       Document d = _index.getDoc(did);
-       double query_w = 0.0;
-       double weight = 0.0;
-       int doc_num = _index.numDocs()-1;
+      Document d = _index.getDoc(did);
+      double query_w = 0.0;
+      double weight = 0.0;
+      int doc_num = _index.numDocs()-1;
       
       double IDF = 0.0;
       double all_termw = 0.0;
@@ -111,7 +109,6 @@ class Ranker {
         }
         weight  = term_f*IDF;
         term_weight.add(weight);
-        //System.out.println(weight);
         
         for(int j = 0; j < qv.size(); ++j){
            if(db.get(i).equals((qv.get(j)))){
@@ -119,25 +116,22 @@ class Ranker {
                query_weight.add(query_w);
           }
        }
-        //System.out.println(query_w);
         query_weight.add(0.0);
     }
       
       for(int i = 0; i < term_weight.size(); i++){
           if(term_weight.get(i) != 0.0){
-              all_termw += term_weight.get(i)*term_weight.get(i);
+              all_termw += Math.pow(term_weight.get(i),2.0);
           }
       }
       all_termw = Math.sqrt(all_termw);
-     // System.out.println(all_termw);
       
       for(int i = 0; i < query_weight.size(); i++){
           if(query_weight.get(i) != 0.0){
-              all_queryw += query_weight.get(i)*query_weight.get(i);
+              all_queryw += Math.pow(query_weight.get(i),2.0);
           }
       }
       all_queryw = Math.sqrt(all_queryw);
-      System.out.println(all_queryw);
       
       for(int i = 0; i < term_weight.size(); i++){
           all_dot_product += term_weight.get(i)*query_weight.get(i);
@@ -169,4 +163,38 @@ class Ranker {
 	   }
 	   return score;
   }
+
+  public double phraseRanker(Vector < String > qv, int did){
+	  Document d = _index.getDoc(did);
+      Vector < String > db = d.get_body_vector();
+	  double score = 0.0;
+	  if(qv.size() == 1){
+		 score = doc_frequency.get(qv.get(0));
+	  }else{
+         for(int i = 0; i <qv.size()- 1; i++){
+			 for(int j = 0; j<db.size() - 1; j++){
+				 if(db.get(j).equals(qv.get(i)) && db.get(j+1).equals(qv.get(i+1)))
+					 score = score + 1;
+			 }
+		 }
+
+	  }
+	  return score;
+  }
+  
+   public double num_views(int did){
+       double score = 0.0;
+       Document d = _index.getDoc(did);
+       score = d.get_numviews();
+       return score;
+   }
+    
+  public double linearModel(Vector < String > qv, int did){
+	  // score = cos+ql+phrase+numviews
+	  double score = 0.0;
+      score += vectorSpaceModel(qv, did) + languageModel(qv, did) + phraseRanker(qv, did) + num_views(did);
+	  return score;
+  }
+
+
 }
