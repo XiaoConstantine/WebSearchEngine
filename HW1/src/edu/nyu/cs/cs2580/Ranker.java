@@ -1,9 +1,19 @@
+/*************************************************************************
+ > File Name: Ranker.java
+ > Author: Xiao Cui
+ > Mail: xc432@nyu.edu
+ > Modified Time: Fri Feb 22 16:44:00 2013
+ > Add ranking function: vector space model, language model(query likehood)
+ > phrase, numviews, linear model.
+ ************************************************************************/
+
 package edu.nyu.cs.cs2580;
 
 import java.util.Vector;
 import java.util.Scanner;
 import java.lang.Math;
 import java.util.HashMap;
+import java.io.*;
 
 class Ranker {
   private Index _index;
@@ -19,6 +29,8 @@ class Ranker {
     for (int i = 0; i < _index.numDocs(); ++i){
       retrieval_results.add(runquery(query, i, ranker_type));
     }
+    //write to file
+    //writer.writeTofile(results, ranker_type);
     return retrieval_results;
   }
 
@@ -58,10 +70,10 @@ class Ranker {
        }
     }
     double score = 0.0;
-	if(ranker_type.equals("cosine")){
+	if(ranker_type.equals("vsm")){
 	   score = vectorSpaceModel(qv, did);
 	   return new ScoredDocument(did, d.get_title_string(), score);
-	}else if(ranker_type.equals("QL")){
+	}else if(ranker_type.equals("ql")){
 	   score = languageModel(qv, did);
 	   return new ScoredDocument(did, d.get_title_string(), score);
 	}else if(ranker_type.equals("phrase")){
@@ -69,7 +81,11 @@ class Ranker {
        return new ScoredDocument(did, d.get_title_string(), score);
 	}else if(ranker_type.equals("linear")){
        System.out.println("linear");
-	   return new ScoredDocument(did, d.get_title_string(), score);
+        score = linearModel(qv, did);
+        return new ScoredDocument(did, d.get_title_string(), score);
+    }else if(ranker_type.equals("numviews")){
+        score = num_views(did);
+        return new ScoredDocument(did, d.get_title_string(), score);
     }else{
         return new ScoredDocument(did, d.get_title_string(), score);
     }
@@ -190,11 +206,27 @@ class Ranker {
    }
     
   public double linearModel(Vector < String > qv, int did){
-	  // score = cos+ql+phrase+numviews
+	  // score = 0.55*cos+0.4*ql+0.0499*phrase+0.0001numviews
 	  double score = 0.0;
-      score += vectorSpaceModel(qv, did) + languageModel(qv, did) + phraseRanker(qv, did) + num_views(did);
+      score += 0.55*vectorSpaceModel(qv, did) + 0.4*languageModel(qv, did) + 0.0499*phraseRanker(qv, did) + 0.0001*num_views(did);
 	  return score;
   }
+  
+    
+   
+  /*implement a writer class
+   has function write(results, ranker_type)  --- write results to csv after rank;
+   can use the same function for evaluate.
+   
+  public void writeToCSV(Vector < ScoredDocument > results, String ranker_type){
+      String finlename = "../results" + "hw1.1-" + ranker_type + ".tsv";
+      try{
+          File file = new File(filename);
+          if(!file.exists()){
+              
+          }
+      }
 
+  }*/
 
 }
