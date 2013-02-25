@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Iterator;
 import java.util.Vector;
+import java.util.Date;
 
 class QueryHandler implements HttpHandler {
   private static String plainResponse =
@@ -48,7 +49,8 @@ class QueryHandler implements HttpHandler {
     String queryResponse = "";  
     String uriQuery = exchange.getRequestURI().getQuery();
     String uriPath = exchange.getRequestURI().getPath();
-
+    // add a mark for output specification
+    String mark = null;
     if ((uriPath != null) && (uriQuery != null)){
       if (uriPath.equals("/search")){
         Map<String,String> query_map = getQueryMap(uriQuery);
@@ -56,44 +58,83 @@ class QueryHandler implements HttpHandler {
         if (keys.contains("query")){
           if (keys.contains("ranker")){
             String ranker_type = query_map.get("ranker");
+              Vector < ScoredDocument > sds = new Vector < ScoredDocument >();
             // @CS2580: Invoke different ranking functions inside your
             // implementation of the Ranker class.
-            if (ranker_type.equals("cosine")){
+            
+              if (ranker_type.equals("vsm")){
                 //call cosine func(vector space model)
-				//_ranker.runquery(uriQuery, "cosine");
-				queryResponse = (ranker_type + " not implemented.");
-            } else if (ranker_type.equals("QL")){
+                mark = "hw1.1-";
+				sds = _ranker.runquery(query_map.get("query"), "vsm");
+                  
+            } else if (ranker_type.equals("ql")){
                // call QL func
-			   // _ranker.runquery(uriQuery, "QL");
-               queryResponse = (ranker_type + " not implemented.");
+                mark = "hw1.1-";
+                sds = _ranker.runquery(query_map.get("query"), "ql");
             } else if (ranker_type.equals("phrase")){
               //call phrase func
-			  //_ranker.runquery(uriQuery, "phrase");
-				queryResponse = (ranker_type + " not implemented.");
+               mark = "hw1.1-";
+			   sds = _ranker.runquery(query_map.get("query"), "phrase");
             } else if (ranker_type.equals("linear")){
               // call linear
-			  // _ranker.runquery(uriQuery, "linear");
-				queryResponse = (ranker_type + " not implemented.");
+                mark = "hw1.2-";
+			    sds = _ranker.runquery(query_map.get("query"), "linear");
             } else {
               queryResponse = (ranker_type+" not implemented.");
             }
+              Iterator < ScoredDocument > itr = sds.iterator();
+              while(itr.hasNext()){
+                  ScoredDocument sd = itr.next();
+                  if(queryResponse.length() > 0){
+                      queryResponse = queryResponse + "\n";
+                  }
+                  queryResponse = queryResponse + query_map.get("query") + "\t" + sd.asString();
+                  String result = query_map.get("query") + "\t" + sd.asString()+"\n";
+                  Writer.getInstance().writeToFile(ranker_type, result, mark);
+              }
+              if(queryResponse.length() > 0 ){
+                  queryResponse = queryResponse + "\n";
+              }
+
           } else {
             // @CS2580: The following is instructor's simple ranker that does not
             // use the Ranker class.
-            Vector < ScoredDocument > sds = _ranker.runquery(query_map.get("baidu"), "QL");
+            Vector < ScoredDocument > sds = _ranker.runquery(query_map.get("query"), "vsm");
             Iterator < ScoredDocument > itr = sds.iterator();
             while (itr.hasNext()){
               ScoredDocument sd = itr.next();
               if (queryResponse.length() > 0){
                 queryResponse = queryResponse + "\n";
               }
-              queryResponse = queryResponse + query_map.get("baidu") + "\t" + sd.asString();
+              queryResponse = queryResponse + query_map.get("query") + "\t" + sd.asString();
             }
             if (queryResponse.length() > 0){
               queryResponse = queryResponse + "\n";
             }
           }
         }
+      }else if(uriPath.equals("/click")){
+          Map<String, String> query_map = getQueryMap(uriQuery);
+          Set<Stirng> keys = query_map.keySet();
+          String sid = null;
+          String did = null;
+          String action = "render";
+          String query = null;
+          if(keys.contains("sid")){
+              sid = query_map.get("sid");
+          }
+          if(keys.contains("did")){
+              did = query_map.get("did");
+          }
+          if(keys.contains("action")){
+              action = query_map.get("action");
+          }
+          if(keys.contains("query")){
+              query = query_map.get("query");
+          }
+          Date time = new Date();
+          String result = sid + "\t" + query + "\t" + did + "\t" + action + "\t" + time;
+          Writer.getInstance().writeToFile()
       }
     }
     

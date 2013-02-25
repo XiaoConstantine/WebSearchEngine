@@ -13,12 +13,13 @@ import java.util.Vector;
 import java.util.Scanner;
 import java.lang.Math;
 import java.util.HashMap;
-import java.io.*;
+import java.util.Collections;
 
 class Ranker {
   private Index _index;
   private HashMap < String, Integer > doc_frequency = new HashMap< String, Integer >();
-
+  private String mark = "hw1.1-";
+    
   public Ranker(String index_source){
     _index = new Index(index_source);
     
@@ -29,6 +30,12 @@ class Ranker {
     for (int i = 0; i < _index.numDocs(); ++i){
       retrieval_results.add(runquery(query, i, ranker_type));
     }
+    Collections.sort(retrieval_results, new ScoreCompare());
+    
+      
+    /*for(ScoredDocument s: retrieval_results){
+          Writer.getInstance().writeToFile(ranker_type, s.asString()+"\n", mark);
+    }*/
     //write to file
     //writer.writeTofile(results, ranker_type);
     return retrieval_results;
@@ -50,6 +57,8 @@ class Ranker {
     Document d = _index.getDoc(did);
     Vector < String > dv = d.get_title_vector();
     Vector < String > db = d.get_body_vector();
+      
+    /*get current document term and frequency*/
     for(int i = 0; i < dv.size(); i++){
         int idx = 0;
         if(doc_frequency.containsKey(dv.get(i))){
@@ -80,8 +89,8 @@ class Ranker {
 	   score = phraseRanker(qv, did);
        return new ScoredDocument(did, d.get_title_string(), score);
 	}else if(ranker_type.equals("linear")){
-       System.out.println("linear");
         score = linearModel(qv, did);
+        mark = "hw1.2-";
         return new ScoredDocument(did, d.get_title_string(), score);
     }else if(ranker_type.equals("numviews")){
         score = num_views(did);
@@ -160,7 +169,7 @@ class Ranker {
       }
       return cosine;
   }
-
+  /*Language model*/
   public double languageModel(Vector< String > qv, int did){
        Document d = _index.getDoc(did);
        Vector < String > db = d.get_body_vector();
@@ -179,13 +188,18 @@ class Ranker {
 	   }
 	   return score;
   }
-
+  
+  /*phrase rank: check qv[i]qv[i+1] match*/
   public double phraseRanker(Vector < String > qv, int did){
 	  Document d = _index.getDoc(did);
       Vector < String > db = d.get_body_vector();
 	  double score = 0.0;
 	  if(qv.size() == 1){
-		 score = doc_frequency.get(qv.get(0));
+          if(doc_frequency.containsKey(qv.get(0))){
+		     score = doc_frequency.get(qv.get(0));
+          }else{
+              score = 0.0;
+          }
 	  }else{
          for(int i = 0; i <qv.size()- 1; i++){
 			 for(int j = 0; j<db.size() - 1; j++){
@@ -198,6 +212,7 @@ class Ranker {
 	  return score;
   }
   
+    /*numviews: just return the number of views as score*/
    public double num_views(int did){
        double score = 0.0;
        Document d = _index.getDoc(did);
@@ -205,6 +220,7 @@ class Ranker {
        return score;
    }
     
+    /*Simple implement as combination of vsm+ql+phrase+views*/
   public double linearModel(Vector < String > qv, int did){
 	  // score = 0.55*cos+0.4*ql+0.0499*phrase+0.0001numviews
 	  double score = 0.0;
