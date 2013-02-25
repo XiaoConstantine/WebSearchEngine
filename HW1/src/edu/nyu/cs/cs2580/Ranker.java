@@ -178,8 +178,13 @@ class Ranker {
 
        for(int i = 0; i < qv.size(); i++){
            int count = 0;
-           if(doc_frequency.containsKey(qv.get(i))){
+           /*if(doc_frequency.containsKey(qv.get(i))){
                count = doc_frequency.get(qv.get(i));
+           }*/
+           for(int j = 0; j < db.size(); j++){
+               if(db.get(j).equals(qv.get(i))){
+                   count++;
+               }
            }
            double termlike = (double)Document.termFrequency(qv.get(i)) / (double)Document.termFrequency();
 		   double doclike = (double) count/ (double)size; // doc terms
