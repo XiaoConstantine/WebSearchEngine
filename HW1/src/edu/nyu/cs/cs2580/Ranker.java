@@ -18,7 +18,7 @@ import java.util.Collections;
 class Ranker {
   private Index _index;
   private HashMap < String, Integer > doc_frequency = new HashMap< String, Integer >();
-  private HashMap < String, Integer > query_frequency = new HashMap< String, Integer>();
+  //private HashMap < String, Integer > query_frequency = new HashMap< String, Integer>();
   private String mark = "hw1.1-";
     
   public Ranker(String index_source){
@@ -51,11 +51,6 @@ class Ranker {
     while (s.hasNext()){
       String term = s.next();
       qv.add(term);
-        if(!query_frequency.containsKey(term)){
-            query_frequency.put(term,1);
-        }else{
-            query_frequency.put(term,query_frequency.get(term)+1);
-        }
     }
 
     // Get the document vector. For hw1, you don't have to worry about the
@@ -137,18 +132,13 @@ class Ranker {
         weight  = term_f*IDF;
         term_weight.add(weight);
         
-        /*for(int j = 0; j < qv.size(); ++j){
+        for(int j = 0; j < qv.size(); ++j){
            if(db.get(i).equals((qv.get(j)))){
                 query_w += IDF;
                query_weight.add(query_w);
           }
        }
-        query_weight.add(0.0);*/
-          if(query_frequency.containsKey(db.get(i))){
-              query_w = query_frequency.get(db.get(i))*IDF;
-              query_weight.add(query_w);
-          }
-          query_weight.add(0.0);
+        query_weight.add(0.0);
     }
       
       for(int i = 0; i < term_weight.size(); i++){
@@ -180,7 +170,9 @@ class Ranker {
   public double languageModel(Vector< String > qv, int did){
        Document d = _index.getDoc(did);
        Vector < String > db = d.get_body_vector();
-       
+       Vector < String > dv = d.get_title_vector();
+       int size = db.size() + dv.size();
+      
 	   double score = 0.0;
 	   double lambda = 0.5;
 
@@ -190,7 +182,7 @@ class Ranker {
                count = doc_frequency.get(qv.get(i));
            }
            double termlike = (double)Document.termFrequency(qv.get(i)) / (double)Document.termFrequency();
-		   double doclike = (double) count/ (double)db.size();
+		   double doclike = (double) count/ (double)size; // doc terms
 		   score += Math.log((1 - lambda)*doclike + lambda*termlike);
 	   }
 	   return score;
