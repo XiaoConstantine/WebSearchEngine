@@ -185,6 +185,7 @@ class Ranker {
 		   double doclike = (double) count/ (double)size; // doc terms
 		   score += Math.log((1 - lambda)*doclike + lambda*termlike);
 	   }
+       score = Math.pow(Math.E, score);
 	   return score;
   }
   
