@@ -115,7 +115,8 @@ class QueryHandler implements HttpHandler {
         }
       }else if(uriPath.equals("/click")){
           Map<String, String> query_map = getQueryMap(uriQuery);
-          Set<Stirng> keys = query_map.keySet();
+          Set<String> keys = query_map.keySet();
+          mark = "hw1.4-";
           String sid = null;
           String did = null;
           String action = "render";
@@ -134,7 +135,7 @@ class QueryHandler implements HttpHandler {
           }
           Date time = new Date();
           String result = sid + "\t" + query + "\t" + did + "\t" + action + "\t" + time;
-          Writer.getInstance().writeToFile()
+          Writer.getInstance().writeToFile("log",result, mark);
       }
     }
     
