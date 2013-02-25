@@ -1,3 +1,9 @@
+/*************************************************************************
+ > File Name: QueryHandler.java
+ > Author: Xiao Cui
+ > Mail: xc432@nyu.edu
+ > Modified Time: Mon Feb 25 16:30:00 2013
+ ************************************************************************/
 package edu.nyu.cs.cs2580;
 
 import java.io.IOException;
@@ -75,7 +81,10 @@ class QueryHandler implements HttpHandler {
               //call phrase func
                mark = "hw1.1-";
 			   sds = _ranker.runquery(query_map.get("query"), "phrase");
-            } else if (ranker_type.equals("linear")){
+            }else if (ranker_type.equals("numviews")){
+               mark = "hw1.1-";
+                sds = _ranker.runquery(query_map.get("query"), "numviews");
+            }else if (ranker_type.equals("linear")){
               // call linear
                 mark = "hw1.2-";
 			    sds = _ranker.runquery(query_map.get("query"), "linear");

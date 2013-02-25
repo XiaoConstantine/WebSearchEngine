@@ -111,7 +111,7 @@ class Ranker {
       Document d = _index.getDoc(did);
       double query_w = 0.0;
       double weight = 0.0;
-      int doc_num = _index.numDocs()-1;
+      int doc_num = _index.numDocs();
       
       double IDF = 0.0;
       double all_termw = 0.0;
@@ -126,7 +126,7 @@ class Ranker {
       
       for (int i = 0; i < db.size(); ++i){
         int doc_f = Document.documentFrequency(db.get(i));
-        IDF = Math.log((double)(doc_num/doc_f))/Math.log((double) 2);
+        IDF = 1+Math.log((double)(doc_num/doc_f))/Math.log((double) 2);
         int term_f = 0;
         
         if(doc_frequency.containsKey(db.get(i))){
