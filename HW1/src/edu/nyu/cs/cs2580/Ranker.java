@@ -200,10 +200,16 @@ class Ranker {
       Vector < String > db = d.get_body_vector();
 	  double score = 0.0;
 	  if(qv.size() == 1){
-          if(doc_frequency.containsKey(qv.get(0))){
+          /*if(doc_frequency.containsKey(qv.get(0))){
 		     score = doc_frequency.get(qv.get(0));
           }else{
               score = 0.0;
+          }*/
+          // for loop check the count of qv.get(0) in db
+          for(int i = 0; i<db.size(); i++){
+              if(db.get(i).equals(qv.get(0))){
+                  score = score+1;
+              }
           }
 	  }else{
          for(int i = 0; i <qv.size()- 1; i++){
