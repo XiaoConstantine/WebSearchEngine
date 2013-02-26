@@ -26,6 +26,10 @@ class Ranker {
     
   }
 
+    public int getDocSize(){
+        return _index.numDocs();
+    }
+    
   public Vector < ScoredDocument > runquery(String query, String ranker_type){
     Vector < ScoredDocument > retrieval_results = new Vector < ScoredDocument > ();
     for (int i = 0; i < _index.numDocs(); ++i){

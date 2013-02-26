@@ -11,6 +11,6 @@ import java.util.Comparator;
 
 class ScoreCompare implements Comparator < ScoredDocument >{
     public int compare(ScoredDocument s1, ScoredDocument s2){
-        return (s1._score < s2._score)?1:-1;
+        return ((Double)(s2._score)).compareTo((Double)(s1._score));
     }
 }

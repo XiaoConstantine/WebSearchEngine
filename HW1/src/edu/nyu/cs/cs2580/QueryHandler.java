@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.Iterator;
 import java.util.Vector;
 import java.util.Date;
+import java.lang.Math;
 
 class QueryHandler implements HttpHandler {
   private static String plainResponse =
@@ -24,6 +25,7 @@ class QueryHandler implements HttpHandler {
 
   private Ranker _ranker;
 
+  private double sid = 0;
   public QueryHandler(Ranker ranker){
     _ranker = ranker;
   }
@@ -52,7 +54,8 @@ class QueryHandler implements HttpHandler {
       System.out.print(key + ":" + requestHeaders.get(key) + "; ");
     }
     System.out.println();
-    String queryResponse = "";  
+    String queryResponse = "";
+    int doc_size = _ranker.getDocSize();
     String uriQuery = exchange.getRequestURI().getQuery();
     String uriPath = exchange.getRequestURI().getPath();
     // add a mark for output specification
@@ -61,10 +64,12 @@ class QueryHandler implements HttpHandler {
       if (uriPath.equals("/search")){
         Map<String,String> query_map = getQueryMap(uriQuery);
         Set<String> keys = query_map.keySet();
+        sid = (int)(Math.random()*1000);
+        Vector < ScoredDocument > sds = new Vector < ScoredDocument >();
         if (keys.contains("query")){
           if (keys.contains("ranker")){
             String ranker_type = query_map.get("ranker");
-              Vector < ScoredDocument > sds = new Vector < ScoredDocument >();
+            //Vector < ScoredDocument > sds = new Vector < ScoredDocument >();
             // @CS2580: Invoke different ranking functions inside your
             // implementation of the Ranker class.
             
@@ -97,7 +102,7 @@ class QueryHandler implements HttpHandler {
                   if(queryResponse.length() > 0){
                       queryResponse = queryResponse + "\n";
                   }
-                  queryResponse = queryResponse + query_map.get("query") + "\t" + sd.asString();
+                  queryResponse = queryResponse + query_map.get("query") + "\t" + sd.asString()+"\t" + "render" +"\t" + sid;
                   String result = query_map.get("query") + "\t" + sd.asString()+"\n";
                   Writer.getInstance().writeToFile(ranker_type, result, mark);
               }
@@ -108,7 +113,7 @@ class QueryHandler implements HttpHandler {
           } else {
             // @CS2580: The following is instructor's simple ranker that does not
             // use the Ranker class.
-            Vector < ScoredDocument > sds = _ranker.runquery(query_map.get("query"), "vsm");
+            //Vector < ScoredDocument > sds = _ranker.runquery(query_map.get("query"), "vsm");
             Iterator < ScoredDocument > itr = sds.iterator();
             while (itr.hasNext()){
               ScoredDocument sd = itr.next();
@@ -143,8 +148,16 @@ class QueryHandler implements HttpHandler {
               query = query_map.get("query");
           }
           Date time = new Date();
-          String result = sid + "\t" + query + "\t" + did + "\t" + action + "\t" + time;
+         String result = sid + "\t" + query + "\t" + did + "\t" + action + "\t" + time + "\n";
           Writer.getInstance().writeToFile("log",result, mark);
+          for(int i = 0; i <doc_size; i++){
+              int id = Integer.parseInt(did);
+              if(i!=id){
+                  String result_norm = sid + "\t" + query + "\t" + i + "\t" + "render" + "\t" + time + "\n";
+                  Writer.getInstance().writeToFile("log",result_norm,mark);
+              }
+          }
+
       }
     }
     
