@@ -52,9 +52,21 @@ class Ranker {
     Scanner s = new Scanner(query);
 
     Vector < String > qv = new Vector < String > ();
+      Map<String, Integer> query_weight = new HashMap<String, Integer>();
     while (s.hasNext()){
       String term = s.next();
-      qv.add(term);
+        if(ranker_type.equals("vsm")){
+            if(_index.termFrequency(term) > 0){
+                qv.add(term);
+                if(!query_weight.containsKey(term)){
+                    query_weight.put(term,1);
+                }else{
+                    query_weight.put(term, query_weight.get(term)+1);
+                }
+            }
+        }else{
+            qv.add(term);
+        }
     }
 
     // Get the document vector. For hw1, you don't have to worry about the
@@ -108,7 +120,7 @@ class Ranker {
    *
    */
     
-  public double vectorSpaceModel(Vector < String > qv, int did){
+  public double vectorSpaceModel(Vector < String > qv, HashMap<String, Integer> query_weight, int did){
       Document d = _index.getDoc(did);
       double query_w = 0.0;
       double weight = 0.0;
@@ -122,7 +134,7 @@ class Ranker {
       
       
       Vector < Double > term_weight = new Vector < Double >();
-      Vector < Double > query_weight = new Vector < Double >();
+     // Vector < Double > query_weight = new Vector < Double >();
       Vector < String > db = d.get_body_vector();
       
       for (int i = 0; i < db.size(); ++i){
@@ -134,18 +146,24 @@ class Ranker {
            term_f = doc_frequency.get(db.get(i));
         }
         weight  = term_f*IDF;
-        term_weight.add(weight);
-        
-        for(int j = 0; j < qv.size(); ++j){
+        //term_weight.add(weight);
+          all_termw += Math.pow(weight, 2);
+        /*for(int j = 0; j < qv.size(); ++j){
            if(db.get(i).equals((qv.get(j)))){
                 query_w += IDF;
                query_weight.add(query_w);
           }
        }
-        query_weight.add(0.0);
+        query_weight.add(0.0);*/
+          if(query_weight.containsKey(db.get(i))){
+              query_w = query_weight.get(db.get(i))*IDF;
+              all_dot_product = query_w*weight;
+              all_queryw +=Math.pow(query_w,2);
+          }
     }
-      
-      for(int i = 0; i < term_weight.size(); i++){
+      all_termw = Math.sqrt(all_termw);
+     all_queryw = Math.sqrt(all_queryw);
+     /* for(int i = 0; i < term_weight.size(); i++){
           if(term_weight.get(i) != 0.0){
               all_termw += Math.pow(term_weight.get(i),2.0);
           }
@@ -161,7 +179,7 @@ class Ranker {
       
       for(int i = 0; i < term_weight.size(); i++){
           all_dot_product += term_weight.get(i)*query_weight.get(i);
-      }
+      }*/
       
       if((all_queryw*all_termw) != 0){
           cosine = all_dot_product/(all_termw*all_queryw);
@@ -239,21 +257,4 @@ class Ranker {
 	  return score;
   }
   
-    
-   
-  /*implement a writer class
-   has function write(results, ranker_type)  --- write results to csv after rank;
-   can use the same function for evaluate.
-   
-  public void writeToCSV(Vector < ScoredDocument > results, String ranker_type){
-      String finlename = "../results" + "hw1.1-" + ranker_type + ".tsv";
-      try{
-          File file = new File(filename);
-          if(!file.exists()){
-              
-          }
-      }
-
-  }*/
-
 }
