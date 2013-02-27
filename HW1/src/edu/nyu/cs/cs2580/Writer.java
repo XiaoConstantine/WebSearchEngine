@@ -22,7 +22,7 @@ class Writer{
     }
     // how to distinguish rank and evaluate?
     // hw-1? hw-2?
-    // Add a mark?
+    // Add a mark --- solve problemn
     public void writeToFile(String ranker_type, String results, String mark){
         String filename = folder + mark + ranker_type + ".tsv";
         try{

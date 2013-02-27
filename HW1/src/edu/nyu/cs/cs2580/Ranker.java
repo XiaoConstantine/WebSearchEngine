@@ -159,12 +159,9 @@ class Ranker {
        Document d = _index.getDoc(did);
        Vector < String > db = d.get_body_vector();
        Vector < String > dv = d.get_title_vector();
-      int size = db.size(); //+ dv.size();
-      
+       int size = db.size()+ dv.size();
 	   double score = 0.0;
 	   double lambda = 0.5;
-      
-    
        for(int i = 0; i < qv.size(); i++){
            int count = 0;
             for(int j = 0; j < db.size(); j++){
@@ -172,8 +169,6 @@ class Ranker {
                    count++;
                }
            }
-           System.out.println(count);
-           System.out.println(size) ;
            double termlike = (double)Document.termFrequency(qv.get(i)) / (double)Document.termFrequency();
 		   double doclike = (double) count/ (double)size; // doc terms
 		   score += Math.log((1 - lambda)*doclike + lambda*termlike);
@@ -187,6 +182,7 @@ class Ranker {
 	  Document d = _index.getDoc(did);
       Vector < String > db = d.get_body_vector();
 	  double score = 0.0;
+      /*if query just has one word return it's frequency in doc */
 	  if(qv.size() == 1){
           for(int i = 0; i <db.size();i++){
               if(db.get(i).equals(qv.get(0))){
@@ -217,7 +213,7 @@ class Ranker {
   public double linearModel(Vector < String > qv,HashMap<String, Integer>query_weight, int did){
 	  // score = 0.55*cos+1*ql+0.0499*phrase+0.0001numviews
 	  double score = 0.0;
-      score += 0.55*vectorSpaceModel(qv,query_weight, did) + 0.4*languageModel(qv, did) + 0.0499*phraseRanker(qv, did) + 0.0001*num_views(did);
+      score += 0.55*vectorSpaceModel(qv,query_weight, did) + 1*languageModel(qv, did) + 0.0499*phraseRanker(qv, did) + 0.0001*num_views(did);
 	  return score;
   }
   

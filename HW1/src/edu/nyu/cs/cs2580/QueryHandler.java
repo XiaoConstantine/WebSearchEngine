@@ -18,8 +18,6 @@ import java.util.Iterator;
 import java.util.Vector;
 import java.util.Date;
 import java.lang.Math;
-//import java.net.URLDecoder;
-//import java.io.UnsupportedEncodingException;
 
 class QueryHandler implements HttpHandler {
   private static String plainResponse =
@@ -38,12 +36,6 @@ class QueryHandler implements HttpHandler {
     for (String param : params){  
       String name = param.split("=")[0];  
       String value = param.split("=")[1];
-  /*      try{
-            name = URLDecoder.decode(name, System.getProperty("file.encoding"));
-            value = URLDecoder.decode(value, System.getProperty("file.encoding"));
-        }catch(UnsupportedEncodingException e){
-            e.printStackTrace();
-        }*/
       map.put(name, value);  
     }
     return map;  
@@ -182,7 +174,7 @@ class QueryHandler implements HttpHandler {
               query = query_map.get("query");
           }
           Date time = new Date();
-         String result = sid + "\t" + query + "\t" + did + "\t" + action + "\t" + time + "\n";
+          String result = sid + "\t" + query + "\t" + did + "\t" + action + "\t" + time + "\n";
           Writer.getInstance().writeToFile("log",result, mark);
           for(int i = 0; i <doc_size; i++){
               int id = Integer.parseInt(did);
