@@ -52,7 +52,7 @@ class Ranker {
     Scanner s = new Scanner(query);
 
     Vector < String > qv = new Vector < String > ();
-      Map<String, Integer> query_weight = new HashMap<String, Integer>();
+    HashMap<String, Integer> query_weight = new HashMap<String, Integer>();
     while (s.hasNext()){
       String term = s.next();
         if(ranker_type.equals("vsm")){
@@ -72,28 +72,10 @@ class Ranker {
     // Get the document vector. For hw1, you don't have to worry about the
     // details of how index works.
     Document d = _index.getDoc(did);
-    Vector < String > dv = d.get_title_vector();
-    Vector < String > db = d.get_body_vector();
-      
-    /*get current document term and frequency*/
-    for(int i = 0; i < dv.size(); i++){
-        if(doc_frequency.containsKey(dv.get(i))){
-            doc_frequency.put(dv.get(i), doc_frequency.get(dv.get(i))+1);
-        }else{
-            doc_frequency.put(dv.get(i), 1);
-        }
-    }
-      
-    for(int i = 0; i < db.size(); i++){
-      if(doc_frequency.containsKey(db.get(i))){
-            doc_frequency.put(db.get(i), doc_frequency.get(db.get(i))+1);
-       }else{
-            doc_frequency.put(db.get(i), 1);
-       }
-    }
-    double score = 0.0;
+          
+       double score = 0.0;
 	if(ranker_type.equals("vsm")){
-	   score = vectorSpaceModel(qv, did);
+	   score = vectorSpaceModel(qv, query_weight,did);
 	   return new ScoredDocument(did, d.get_title_string(), score);
 	}else if(ranker_type.equals("ql")){
 	   score = languageModel(qv, did);
@@ -102,7 +84,7 @@ class Ranker {
 	   score = phraseRanker(qv, did);
        return new ScoredDocument(did, d.get_title_string(), score);
 	}else if(ranker_type.equals("linear")){
-        score = linearModel(qv, did);
+        score = linearModel(qv,query_weight, did);
         mark = "hw1.2-";
         return new ScoredDocument(did, d.get_title_string(), score);
     }else if(ranker_type.equals("numviews")){
@@ -132,55 +114,54 @@ class Ranker {
       double all_dot_product = 0.0;
       double cosine = 0.0;
       
+      HashMap<String, Integer>doc_frequency = new HashMap<String, Integer>();
+      Vector < String > dv = d.get_title_vector();
+      Vector < String > db = d.get_body_vector();
+
+      
+      /*get current document term and frequency*/
+      for(int i = 0; i < dv.size(); i++){
+          if(doc_frequency.containsKey(dv.get(i))){
+              doc_frequency.put(dv.get(i), doc_frequency.get(dv.get(i))+1);
+          }else{
+              doc_frequency.put(dv.get(i), 1);
+          }
+      }
+      
+      for(int i = 0; i < db.size(); i++){
+          if(doc_frequency.containsKey(db.get(i))){
+              doc_frequency.put(db.get(i), doc_frequency.get(db.get(i))+1);
+          }else{
+              doc_frequency.put(db.get(i), 1);
+          }
+      }
+
+      
       
       Vector < Double > term_weight = new Vector < Double >();
      // Vector < Double > query_weight = new Vector < Double >();
-      Vector < String > db = d.get_body_vector();
+      //Vector < String > db = d.get_body_vector();
       
       for (int i = 0; i < db.size(); ++i){
         int doc_f = Document.documentFrequency(db.get(i));
-        IDF = 1+Math.log((double)(doc_num/doc_f))/Math.log((double) 2);
+        IDF = 1+Math.log(doc_num/doc_f)/Math.log(2);
         int term_f = 0;
         
         if(doc_frequency.containsKey(db.get(i))){
            term_f = doc_frequency.get(db.get(i));
         }
+          
+         // System.out.println(term_f+"\n");
         weight  = term_f*IDF;
-        //term_weight.add(weight);
-          all_termw += Math.pow(weight, 2);
-        /*for(int j = 0; j < qv.size(); ++j){
-           if(db.get(i).equals((qv.get(j)))){
-                query_w += IDF;
-               query_weight.add(query_w);
-          }
-       }
-        query_weight.add(0.0);*/
-          if(query_weight.containsKey(db.get(i))){
+        all_termw += Math.pow(weight, 2);
+        if(query_weight.containsKey(db.get(i))){
               query_w = query_weight.get(db.get(i))*IDF;
-              all_dot_product = query_w*weight;
+              all_dot_product += query_w*weight;
               all_queryw +=Math.pow(query_w,2);
           }
     }
-      all_termw = Math.sqrt(all_termw);
+     all_termw = Math.sqrt(all_termw);
      all_queryw = Math.sqrt(all_queryw);
-     /* for(int i = 0; i < term_weight.size(); i++){
-          if(term_weight.get(i) != 0.0){
-              all_termw += Math.pow(term_weight.get(i),2.0);
-          }
-      }
-      all_termw = Math.sqrt(all_termw);
-      
-      for(int i = 0; i < query_weight.size(); i++){
-          if(query_weight.get(i) != 0.0){
-              all_queryw += Math.pow(query_weight.get(i),2.0);
-          }
-      }
-      all_queryw = Math.sqrt(all_queryw);
-      
-      for(int i = 0; i < term_weight.size(); i++){
-          all_dot_product += term_weight.get(i)*query_weight.get(i);
-      }*/
-      
       if((all_queryw*all_termw) != 0){
           cosine = all_dot_product/(all_termw*all_queryw);
       }else{
@@ -250,10 +231,10 @@ class Ranker {
    }
     
     /*Simple implement as combination of vsm+ql+phrase+views*/
-  public double linearModel(Vector < String > qv, int did){
+  public double linearModel(Vector < String > qv,HashMap<String, Integer>query_weight, int did){
 	  // score = 0.55*cos+0.4*ql+0.0499*phrase+0.0001numviews
 	  double score = 0.0;
-      score += 0.55*vectorSpaceModel(qv, did) + 0.4*languageModel(qv, did) + 0.0499*phraseRanker(qv, did) + 0.0001*num_views(did);
+      score += 0.55*vectorSpaceModel(qv,query_weight, did) + 0.4*languageModel(qv, did) + 0.0499*phraseRanker(qv, did) + 0.0001*num_views(did);
 	  return score;
   }
   
