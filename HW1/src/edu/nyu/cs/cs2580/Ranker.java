@@ -18,7 +18,6 @@ import java.util.Collections;
 class Ranker {
   private Index _index;
   private HashMap < String, Integer > doc_frequency = new HashMap< String, Integer >();
-  //private HashMap < String, Integer > query_frequency = new HashMap< String, Integer>();
   private String mark = "hw1.1-";
     
   public Ranker(String index_source){
@@ -36,13 +35,6 @@ class Ranker {
       retrieval_results.add(runquery(query, i, ranker_type));
     }
     Collections.sort(retrieval_results, new ScoreCompare());
-    
-      
-    /*for(ScoredDocument s: retrieval_results){
-          Writer.getInstance().writeToFile(ranker_type, s.asString()+"\n", mark);
-    }*/
-    //write to file
-    //writer.writeTofile(results, ranker_type);
     return retrieval_results;
   }
 
@@ -136,12 +128,7 @@ class Ranker {
           }
       }
 
-      
-      
       Vector < Double > term_weight = new Vector < Double >();
-     // Vector < Double > query_weight = new Vector < Double >();
-      //Vector < String > db = d.get_body_vector();
-      
       for (int i = 0; i < db.size(); ++i){
         int doc_f = Document.documentFrequency(db.get(i));
         IDF = 1+Math.log(doc_num/doc_f)/Math.log(2);
@@ -150,8 +137,6 @@ class Ranker {
         if(doc_frequency.containsKey(db.get(i))){
            term_f = doc_frequency.get(db.get(i));
         }
-          
-         // System.out.println(term_f+"\n");
         weight  = term_f*IDF;
         all_termw += Math.pow(weight, 2);
         if(query_weight.containsKey(db.get(i))){
@@ -159,9 +144,9 @@ class Ranker {
               all_dot_product += query_w*weight;
               all_queryw +=Math.pow(query_w,2);
           }
-    }
-     all_termw = Math.sqrt(all_termw);
-     all_queryw = Math.sqrt(all_queryw);
+     }
+      all_termw = Math.sqrt(all_termw);
+      all_queryw = Math.sqrt(all_queryw);
       if((all_queryw*all_termw) != 0){
           cosine = all_dot_product/(all_termw*all_queryw);
       }else{
@@ -174,21 +159,21 @@ class Ranker {
        Document d = _index.getDoc(did);
        Vector < String > db = d.get_body_vector();
        Vector < String > dv = d.get_title_vector();
-       int size = db.size() + dv.size();
+      int size = db.size(); //+ dv.size();
       
 	   double score = 0.0;
 	   double lambda = 0.5;
-
+      
+    
        for(int i = 0; i < qv.size(); i++){
            int count = 0;
-           /*if(doc_frequency.containsKey(qv.get(i))){
-               count = doc_frequency.get(qv.get(i));
-           }*/
-           for(int j = 0; j < db.size(); j++){
+            for(int j = 0; j < db.size(); j++){
                if(db.get(j).equals(qv.get(i))){
                    count++;
                }
            }
+           System.out.println(count);
+           System.out.println(size) ;
            double termlike = (double)Document.termFrequency(qv.get(i)) / (double)Document.termFrequency();
 		   double doclike = (double) count/ (double)size; // doc terms
 		   score += Math.log((1 - lambda)*doclike + lambda*termlike);
@@ -203,13 +188,7 @@ class Ranker {
       Vector < String > db = d.get_body_vector();
 	  double score = 0.0;
 	  if(qv.size() == 1||db.size()==1){
-         // for loop check the count of qv.get(0) in db
-          /*for(int i = 0; i<db.size(); i++){
-              if(db.get(i).equals(qv.get(0))){
-                  score = score+1;
-              }
-          }*/
-          score = 0.0;
+           score = 0.0;
 	  }else{
          for(int i = 0; i <qv.size()- 1; i++){
 			 for(int j = 0; j<db.size() - 1; j++){
@@ -232,9 +211,9 @@ class Ranker {
     
     /*Simple implement as combination of vsm+ql+phrase+views*/
   public double linearModel(Vector < String > qv,HashMap<String, Integer>query_weight, int did){
-	  // score = 0.55*cos+0.4*ql+0.0499*phrase+0.0001numviews
+	  // score = 0.55*cos+1*ql+0.0499*phrase+0.0001numviews
 	  double score = 0.0;
-      score += 0.55*vectorSpaceModel(qv,query_weight, did) + 0.4*languageModel(qv, did) + 0.0499*phraseRanker(qv, did) + 0.0001*num_views(did);
+      score += 0.55*vectorSpaceModel(qv,query_weight, did) + 1.0*languageModel(qv, did) + 0.0499*phraseRanker(qv, did) + 0.0001*num_views(did);
 	  return score;
   }
   
