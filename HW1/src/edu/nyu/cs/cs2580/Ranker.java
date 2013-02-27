@@ -187,8 +187,12 @@ class Ranker {
 	  Document d = _index.getDoc(did);
       Vector < String > db = d.get_body_vector();
 	  double score = 0.0;
-	  if(qv.size() == 1||db.size()==1){
-           score = 0.0;
+	  if(qv.size() == 1){
+          for(int i = 0; i <db.size();i++){
+              if(db.get(i).equals(qv.get(0))){
+                  score += 1;
+              }
+          }
 	  }else{
          for(int i = 0; i <qv.size()- 1; i++){
 			 for(int j = 0; j<db.size() - 1; j++){
@@ -213,7 +217,7 @@ class Ranker {
   public double linearModel(Vector < String > qv,HashMap<String, Integer>query_weight, int did){
 	  // score = 0.55*cos+1*ql+0.0499*phrase+0.0001numviews
 	  double score = 0.0;
-      score += 0.55*vectorSpaceModel(qv,query_weight, did) + 1.0*languageModel(qv, did) + 0.0499*phraseRanker(qv, did) + 0.0001*num_views(did);
+      score += 0.55*vectorSpaceModel(qv,query_weight, did) + 0.4*languageModel(qv, did) + 0.0499*phraseRanker(qv, did) + 0.0001*num_views(did);
 	  return score;
   }
   
