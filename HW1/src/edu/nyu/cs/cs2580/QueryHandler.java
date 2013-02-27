@@ -18,6 +18,8 @@ import java.util.Iterator;
 import java.util.Vector;
 import java.util.Date;
 import java.lang.Math;
+//import java.net.URLDecoder;
+//import java.io.UnsupportedEncodingException;
 
 class QueryHandler implements HttpHandler {
   private static String plainResponse =
@@ -35,11 +37,32 @@ class QueryHandler implements HttpHandler {
     Map<String, String> map = new HashMap<String, String>();  
     for (String param : params){  
       String name = param.split("=")[0];  
-      String value = param.split("=")[1];  
+      String value = param.split("=")[1];
+  /*      try{
+            name = URLDecoder.decode(name, System.getProperty("file.encoding"));
+            value = URLDecoder.decode(value, System.getProperty("file.encoding"));
+        }catch(UnsupportedEncodingException e){
+            e.printStackTrace();
+        }*/
       map.put(name, value);  
     }
     return map;  
-  } 
+  }
+    
+   /*public String toHtml(String in){
+       StringBuffer out = new StringBuffer();
+       for(int i = 0; in!=null&&i<in.length(); i++){
+           char c = in.charAt(i);
+           if(c == '\t'){
+              out.append("&nbsp&nbsp&nbsp&nbsp;");
+           }else if(c == '\n'){
+               out.append("<br/>;");
+           }else{
+               out.append(c);
+           }
+       }
+       return out.toString();
+   }*/
   
   public void handle(HttpExchange exchange) throws IOException {
     String requestMethod = exchange.getRequestMethod();
@@ -54,6 +77,8 @@ class QueryHandler implements HttpHandler {
       System.out.print(key + ":" + requestHeaders.get(key) + "; ");
     }
     System.out.println();
+      
+    boolean isHtml = false; // check if user want output as html format
     String queryResponse = "";
     int doc_size = _ranker.getDocSize();
     String uriQuery = exchange.getRequestURI().getQuery();
@@ -96,6 +121,12 @@ class QueryHandler implements HttpHandler {
             } else {
               queryResponse = (ranker_type+" not implemented.");
             }
+              
+              if(keys.contains("format")){
+                  if(query_map.get("format").equals("html")){
+                      isHtml = true;
+                  }
+              }
               Iterator < ScoredDocument > itr = sds.iterator();
               while(itr.hasNext()){
                   ScoredDocument sd = itr.next();
@@ -104,6 +135,9 @@ class QueryHandler implements HttpHandler {
                   }
                   queryResponse = queryResponse + query_map.get("query") + "\t" + sd.asString()+"\t" + "render" +"\t" + sid;
                   String result = query_map.get("query") + "\t" + sd.asString()+"\n";
+                  /*if(isHtml){
+                      queryResponse += toHtml(query_map.get("query")) + toHtml(sd.asString());
+                  }*/
                   Writer.getInstance().writeToFile(ranker_type, result, mark);
               }
               if(queryResponse.length() > 0 ){
@@ -163,7 +197,11 @@ class QueryHandler implements HttpHandler {
     
       // Construct a simple response.
       Headers responseHeaders = exchange.getResponseHeaders();
-      responseHeaders.set("Content-Type", "text/plain");
+      if(isHtml){
+          responseHeaders.set("Content-Type", "text/html");
+      }else{
+          responseHeaders.set("Content-Type", "text/plain");
+      }
       exchange.sendResponseHeaders(200, 0);  // arbitrary number of bytes
       OutputStream responseBody = exchange.getResponseBody();
       responseBody.write(queryResponse.getBytes());
