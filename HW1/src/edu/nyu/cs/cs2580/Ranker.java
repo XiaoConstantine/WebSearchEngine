@@ -203,18 +203,14 @@ class Ranker {
 	  Document d = _index.getDoc(did);
       Vector < String > db = d.get_body_vector();
 	  double score = 0.0;
-	  if(qv.size() == 1){
-          /*if(doc_frequency.containsKey(qv.get(0))){
-		     score = doc_frequency.get(qv.get(0));
-          }else{
-              score = 0.0;
-          }*/
-          // for loop check the count of qv.get(0) in db
-          for(int i = 0; i<db.size(); i++){
+	  if(qv.size() == 1||db.size()==1){
+         // for loop check the count of qv.get(0) in db
+          /*for(int i = 0; i<db.size(); i++){
               if(db.get(i).equals(qv.get(0))){
                   score = score+1;
               }
-          }
+          }*/
+          score = 0.0;
 	  }else{
          for(int i = 0; i <qv.size()- 1; i++){
 			 for(int j = 0; j<db.size() - 1; j++){
