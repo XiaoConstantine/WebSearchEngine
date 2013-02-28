@@ -12,7 +12,7 @@ import java.io.Serializable;
  * In HW2: student must implement the more efficient {@link DocumentIndexed}.
  * 
  * @author fdiaz
- * @author congyu
+ * @author congyu+=======
  */
 class Document implements Serializable {
   private static final long serialVersionUID = -539495106357836976L;
