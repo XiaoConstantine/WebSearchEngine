@@ -9,6 +9,12 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
  */
 public class IndexerInvertedDoconly extends Indexer {
 
+/*Invert-Index DS: LinkedList with Term & Doc_id which appeared.
+ *Since we have method: corpusDocFrequencyByTerm(Term) & corpusTermFrequency(Term). We should have a HashMap<String, Integer> to return like hw1?
+ *
+ *
+ *
+ * */
   public IndexerInvertedDoconly(Options options) {
     super(options);
     System.out.println("Using Indexer: " + this.getClass().getSimpleName());
