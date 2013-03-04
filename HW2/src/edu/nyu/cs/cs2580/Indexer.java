@@ -3,6 +3,22 @@ package edu.nyu.cs.cs2580;
 import java.io.IOException;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
+/*Basic DS for index:
+ *HashMap<String, List<Integer> > index for IndexerInvertedDoconly
+ *HashMap<String, List<List<Integer> > > index for IndexerInvertedOccurrence
+ *HashMap<String, List<Tuple> > index for IndexerInvertedCompressed
+ *
+ *private class Tuple{
+ *  int doc_id;
+ *   int pos;
+ * 
+ *   public Tuple(int doc_id, int pos){
+ *       this.doc_id = doc_id;
+ *       this.pos = pos;
+ *    }
+ * }
+ */
+
 
 /**
  * This is the abstract Indexer class for all concrete Indexer implementations.
