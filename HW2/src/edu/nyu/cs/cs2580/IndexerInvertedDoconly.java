@@ -10,6 +10,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.Vector;
@@ -125,11 +126,15 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 			Vector<Integer> tmp;
 			if (dictionary.containsKey(token)) {
 				tmp = dictionary.get(token);
+				if (tmp.contains(docid) == false){
+					tmp.add(docid); // add the doc to the term's appearance list
+					dictionary.put(token, tmp);
+				}
 			} else { // new term
 				tmp = new Vector<Integer>();
-			}
-			tmp.add(docid); // add the doc to the term's appearance list
-			dictionary.put(token, tmp);
+				tmp.add(docid); // add the doc to the term's appearance list
+				dictionary.put(token, tmp);
+			}			
 			
 			if (termFrequency.containsKey(token)) {
 				termFrequency.put(token, termFrequency.get(token) + 1);
@@ -163,11 +168,15 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 			Vector<Integer> tmp;
 			if (dictionary.containsKey(token)) {
 				tmp = dictionary.get(token);
+				if (tmp.contains(docid) == false){
+					tmp.add(docid); // add the doc to the term's appearance list
+					dictionary.put(token, tmp);
+				}
 			} else { // new term
 				tmp = new Vector<Integer>();
-			}
-			tmp.add(docid);
-			dictionary.put(token, tmp);
+				tmp.add(docid); // add the doc to the term's appearance list
+				dictionary.put(token, tmp);
+			}	
 			
 			if (termFrequency.containsKey(token)) {
 				termFrequency.put(token, termFrequency.get(token) + 1);
