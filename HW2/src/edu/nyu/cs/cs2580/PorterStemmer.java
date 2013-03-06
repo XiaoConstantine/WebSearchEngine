@@ -4,6 +4,8 @@
     > Mail: xc432@nyu.edu 
     > Created Time: Mon Mar  4 16:27:08 2013
  ************************************************************************/
+package edu.nyu.cs.cs2580;
+
 import java.io.*;
 /**
  * Stemmer, implementing the Porter Stemming Algorithm
