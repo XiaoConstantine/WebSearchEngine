@@ -213,6 +213,7 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 	 * @return the stemmed token
 	 */
 	public String stem(String token) {
+		token = token.toLowerCase();
 		Stemmer stemmer = new Stemmer();
 		stemmer.add(token.toCharArray(), token.toCharArray().length);
 		stemmer.stem();
@@ -241,6 +242,14 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 
 	    System.out.println(Integer.toString(_numDocs) + " documents loaded " +
 	        "with " + Long.toString(_totalTermFrequency) + " terms!");
+	    
+//	    Iterator<String> iter = this.dictionary.keySet().iterator();
+//    	
+//	    for (int i = 0; i < 10; ++i) {
+//	    	String term = iter.next();
+//	    	System.out.println(term + " " + this.dictionary.get(term).toString());
+//	    	
+//	    }
 	}
 
 	@Override
