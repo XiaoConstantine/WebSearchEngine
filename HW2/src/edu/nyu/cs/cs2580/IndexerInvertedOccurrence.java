@@ -32,7 +32,8 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
     //Maps each term to their integer representation
     private Map<String, Integer> _dictionary = new HashMap<String, Integer>();
     
-    private class Tuple{
+    private class Tuple implements Serializable{
+        private static final long serialVersionUID = 1074551805740585098L;
         int docid;
         int pos;
         public Tuple(int doc, int pos){
