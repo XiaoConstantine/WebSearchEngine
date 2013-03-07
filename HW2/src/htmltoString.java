@@ -16,12 +16,28 @@ class htmltoString{
  public static void main(String args[]) throws IOException{
    String filename = "data/wiki/Yahoo!";
    BufferedReader reader = new BufferedReader(new FileReader(filename));
-    String noHtmlContent = null;
+   String noHtmlContent = null;
+   String noScriptContent = null;
+   boolean flag = false;
    try{
         String line = null;
-        while((line = reader.readLine()) != null){
-            noHtmlContent = line.replaceAll("<[^>]*>", "");
-            System.out.println(noHtmlContent);
+        while((line = reader.readLine()) != null){			
+         /* if(line.indexOf("<script>")!=0){
+               noHtmlContent = "";
+               flag = true;
+		   }
+		  
+		  if(line.indexOf("</script>")!=0 || flag == true){
+			   noHtmlContent = "";
+			   flag = false;
+		   }*/
+		  
+            noHtmlContent = line.replaceAll("<[s*>]*>*", "");
+		
+			
+			//noHtmlContent = noScriptContent.replaceAll("<[^>]*>", "");
+
+			System.out.println(noHtmlContent);
         }
     }finally{
         reader.close();

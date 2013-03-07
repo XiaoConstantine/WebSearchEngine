@@ -200,7 +200,13 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable {
       }*/
       return 0;
   }
-    
+ 
+
+  /*Remove word appear more thant %6*/
+  public void removeStopWords(Map<String, List<Tuple>> invertList){
+
+  }
+
   private class Tuple{
       int docid;
       int pos;
