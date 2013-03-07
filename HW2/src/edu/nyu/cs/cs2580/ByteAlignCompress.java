@@ -14,8 +14,8 @@ public class ByteAlignCompress{
   private List<Integer> intList;
 
   public ByteAlignCompress(){
-	byteList = new List<Byte>();
-	intList = new List<Integer>();
+	byteList = new ArrayList<Byte>();
+	intList = new ArrayList<Integer>();
   }
   
   public void compress(List<Integer> postList){

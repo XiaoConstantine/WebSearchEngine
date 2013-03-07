@@ -65,16 +65,27 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 			} finally {
 				reader.close();
 			}
-		} else {
-			//for wiki corpus 
+		} else { //for wiki corpus 
 			File dir = new File(dirPath); 
 			File[] files = dir.listFiles(); // all the files
 			  
+			System.out.println("Indexing wiki files: " + files.length);
+			
 			for (int i = 0; i < files.length; ++i) {
 				processDocument(files[_numDocs], _numDocs);
 				++_numDocs;
 			}
 		}
+		
+		// remove the stop words
+		for (String stopword: termFrequency.keySet()) {
+			if ((float) termFrequency.get(stopword) / _totalTermFrequency > 0.06) {
+				termFrequency.remove(stopword);
+				dictionary.remove(stopword);
+			}
+		}
+		
+		
 		System.out.println("Finish indexing " + _numDocs + " files");
 		System.out.println("Terms: " + _totalTermFrequency);
 		// write the idx to disk
@@ -191,20 +202,88 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 		// read the file, set the doc
 		BufferedReader reader = new BufferedReader(new FileReader(file));
 		try {
+			int scriptFlag = 0; // 0 means no script, 1 means <script>, 2 means <script ...>
 			String line = null;
+
 			while ((line = reader.readLine()) != null) {
-				// parse the content, add them into dictionary
+				// remove the content in <script>
+				while (line.contains("<script") || line.contains("</script>")) {
+					if (scriptFlag == 2) { // in <script ...
+						if (line.contains(">")) {
+							line = line.substring(line.indexOf(">") + 1);
+							scriptFlag = 1;
+						}
+					} 
+					if (scriptFlag == 1) { // in <script> ... 
+						if (line.contains("</script>")) {
+							line = line.substring(line.indexOf("</script>") + 9);
+							scriptFlag = 0;
+						}
+					}
+					if (scriptFlag == 0) {
+						if (line.contains("<script>")) {
+							// parse the no script content and check the remain string
+							processWikiDoc(line.substring(0, line.indexOf("<script>")), docid);
+							scriptFlag = 1;
+							line = line.substring(line.indexOf("<script>") + 8);
+						} else if (line.contains("<script")) {
+							// parse the no script content and check the remain string
+							processWikiDoc(line.substring(0, line.indexOf("<script")), docid);
+							scriptFlag = 2;
+							line = line.substring(line.indexOf("<script") + 7);
+						} 
+					}
+				}
 				
+				if (scriptFlag != 0) continue;
+				
+				// parse the content, add them into dictionary
+				processWikiDoc(line, docid);
 			}
 			documents.add(docid, doc);
-			_numDocs++;
 		} finally {
 			reader.close();
 		}
 
 	}
-	
-	
+
+	/**
+	 * process the wiki doc
+	 */
+	public void processWikiDoc(String content, int docid) {
+		String pureText;
+		pureText = content.replaceAll("<[^>]*>", " "); // remove <...>
+		pureText = pureText.replaceAll("\\pP|\\pS|\\pC", " "); // replace sign with whitespace
+		Scanner s = new Scanner(pureText).useDelimiter(" ");
+		
+		while (s.hasNext()) {
+			String token = stem(s.next());
+			// 
+			if (token.matches("[0-9a-z]*") == false) continue; // not number or english
+			// check the stemmed token
+			Vector<Integer> tmp;
+			if (dictionary.containsKey(token)) {
+				tmp = dictionary.get(token);
+				if (tmp.contains(docid) == false){
+					tmp.add(docid); // add the doc to the term's appearance list
+					dictionary.put(token, tmp);
+				}
+			} else { // new term
+				tmp = new Vector<Integer>();
+				tmp.add(docid); // add the doc to the term's appearance list
+				dictionary.put(token, tmp);
+			}	
+			
+			if (termFrequency.containsKey(token)) {
+				termFrequency.put(token, termFrequency.get(token) + 1);
+			} else {
+				termFrequency.put(token, 1);
+			}
+			
+			++_totalTermFrequency;
+		}
+		s.close();
+	}
 
 	/**
 	 * Stem a token in documents, temporarily static for testing
@@ -352,4 +431,63 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 		SearchEngine.Check(false, "Not implemented!");
 		return 0;
 	}
+	
+//	 public static void main(String args[]) throws IOException{
+//		   String fileName = "/home/zz477/git/WebSearchEngine/HW2/data/3D_film";
+////		   BufferedReader reader = new BufferedReader(new FileReader(filename));
+////		    String noHtmlContent = null;
+////		   try{
+////		        String line = null;
+////		        while((line = reader.readLine()) != null){
+////		            noHtmlContent = line.replaceAll("<[^>]*>", " ");
+////		            noHtmlContent = noHtmlContent.replaceAll("\\pP|\\pS|\\pC", " ");
+////		            
+////		             System.out.println(noHtmlContent);
+////		        }
+////		    }finally{
+////		        reader.close();
+////		    }
+//		// read the file, set the doc
+//			BufferedReader reader = new BufferedReader(new FileReader(fileName));
+//			try {
+//				int scriptFlag = 0; // 0 means no script, 1 means <script>, 2 means <script ...>
+//				String line = null;
+//				String pureText = null;
+//				while ((line = reader.readLine()) != null) {
+//					// remove the content in <script>
+//					while (line.contains("<script") || line.contains("</script>")) {
+//						if (scriptFlag == 2) { // in <script ...
+//							if (line.contains(">")) {
+//								line = line.substring(line.indexOf(">") + 1);
+//								scriptFlag = 1;
+//							}
+//						} 
+//						if (scriptFlag == 1) { // in <script> ... 
+//							if (line.contains("</script>")) {
+//								line = line.substring(line.indexOf("</script>") + 9);
+//								scriptFlag = 0;
+//							}
+//						}
+//						if (scriptFlag == 0) {
+//							if (line.contains("<script>")) {
+//								scriptFlag = 1;
+//								System.out.println(line.substring(0, line.indexOf("<script>")));
+//								line = line.substring(line.indexOf("<script>") + 8);
+//							} else if (line.contains("<script")) {
+//								scriptFlag = 2;
+//								System.out.println(line.substring(0, line.indexOf("<script")));
+//								line = line.substring(line.indexOf("<script") + 7);
+//							} 
+//						}
+//					}
+//					
+//					if (scriptFlag != 0) continue;
+//					
+//					System.out.println(line);
+//				}
+//			} finally {
+//				reader.close();
+//			}
+//		   
+//	 }
 }

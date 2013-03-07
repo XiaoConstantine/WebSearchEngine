@@ -14,7 +14,7 @@ import java.io.IOException;
 class htmltoString{
    
  public static void main(String args[]) throws IOException{
-   String filename = "data/wiki/Yahoo!";
+   String filename = "/home/zz477/git/WebSearchEngine/HW2/data/wiki/Yahoo!";
    BufferedReader reader = new BufferedReader(new FileReader(filename));
    String noHtmlContent = null;
    String noScriptContent = null;
