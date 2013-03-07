@@ -175,14 +175,12 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
 					if (scriptFlag == 0) {
 						if (line.contains("<script>")) {
 							// parse the no script content and check the remain string
-                            String pureText = prePraseLine(line.substring(0, line.indexOf("<script>")));
-                            phraseLine(docid, pureText, bodyTokens, " ");
+                            phraseFile(docid, line.substring(0, line.indexOf("<script>")), bodyTokens);
 							scriptFlag = 1;
 							line = line.substring(line.indexOf("<script>") + 8);
 						} else if (line.contains("<script")) {
 							// parse the no script content and check the remain string
-                            String pureText = prePraseLine(line.substring(0, line.indexOf("<script")));
-                            phraseLine(docid,pureText,bodyTokens," ");
+                            phraseFile(docid,line.substring(0, line.indexOf("<script")),bodyTokens);
 							scriptFlag = 2;
 							line = line.substring(line.indexOf("<script") + 7);
 							if (line.contains(">")) {
@@ -194,8 +192,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
 				}
 				if (scriptFlag != 0) continue;
 				// parse the content, add them into dictionary
-                String pureText = prePraseLine(line);
-                phraseLine(docid,pureText,bodyTokens," ");
+                phraseFile(docid,line,bodyTokens);
 			}
 		} finally {
 			reader.close();
@@ -239,11 +236,33 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
         }
     }
     
-    private String prePraseLine(String string){
+    private void phraseFile(int docid, String content, Vector<Integer> tokens){
         String pureText;
-        pureText = string.replaceAll("<[^>]*>", " ");
+        pureText = content.replaceAll("<[^>]*>", " ");
 		pureText = pureText.replaceAll("\\pP|\\pS|\\pC", " ");
-        return pureText;
+        Scanner s = new Scanner(content);
+        int pos = 0;
+        while(s.hasNext()){
+            String token = stem(s.next());
+            int idx = -1;
+            if(_dictionary.containsKey(token) && invertList.get(token) != null){
+                idx  = _dictionary.get(token);
+                List<Tuple> Idx = invertList.get(token);
+                Idx.add(new Tuple(docid,pos));
+            }else{
+                idx = _terms.size();
+                _terms.add(token);
+                _dictionary.put(token,idx);
+                _termCorpusFrequency.put(idx,0);
+                _termDocFrequency.put(idx,0);
+                List<Tuple> Idx = new ArrayList<Tuple>();
+                Idx.add(new Tuple(docid,pos));
+                invertList.put(token,Idx);
+            }
+            pos++;
+            tokens.add(idx);
+        }
+
     }
     
     private void updateStatistics(Vector<Integer> tokens, Set<Integer> uniques){
