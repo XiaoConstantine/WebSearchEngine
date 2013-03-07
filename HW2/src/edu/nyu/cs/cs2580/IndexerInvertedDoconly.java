@@ -69,11 +69,10 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 			File dir = new File(dirPath); 
 			File[] files = dir.listFiles(); // all the files
 			  
-			System.out.println("Indexing wiki files: " + files.length);
-			
 			for (int i = 0; i < files.length; ++i) {
 				processDocument(files[_numDocs], _numDocs);
 				++_numDocs;
+				System.out.println("Finish parsing wiki file: " + _numDocs);
 			}
 		}
 		
@@ -231,6 +230,10 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 							processWikiDoc(line.substring(0, line.indexOf("<script")), docid);
 							scriptFlag = 2;
 							line = line.substring(line.indexOf("<script") + 7);
+							if (line.contains(">")) {
+								line = line.substring(line.indexOf(">") + 1);
+								scriptFlag = 1;
+							}
 						} 
 					}
 				}
@@ -247,19 +250,16 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 
 	}
 
-	/**
-	 * process the wiki doc
-	 */
 	public void processWikiDoc(String content, int docid) {
 		String pureText;
-		pureText = content.replaceAll("<[^>]*>", " "); // remove <...>
-		pureText = pureText.replaceAll("\\pP|\\pS|\\pC", " "); // replace sign with whitespace
+		pureText = content.replaceAll("<[^>]*>", " ");
+		pureText = pureText.replaceAll("\\pP|\\pS|\\pC", " ");
 		Scanner s = new Scanner(pureText).useDelimiter(" ");
 		
 		while (s.hasNext()) {
 			String token = stem(s.next());
 			// 
-			if (token.matches("[0-9a-z]*") == false) continue; // not number or english
+			if (token.matches("[0-9a-z]*") == false) continue;
 			// check the stemmed token
 			Vector<Integer> tmp;
 			if (dictionary.containsKey(token)) {
@@ -433,26 +433,14 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 	}
 	
 //	 public static void main(String args[]) throws IOException{
-//		   String fileName = "/home/zz477/git/WebSearchEngine/HW2/data/3D_film";
-////		   BufferedReader reader = new BufferedReader(new FileReader(filename));
-////		    String noHtmlContent = null;
-////		   try{
-////		        String line = null;
-////		        while((line = reader.readLine()) != null){
-////		            noHtmlContent = line.replaceAll("<[^>]*>", " ");
-////		            noHtmlContent = noHtmlContent.replaceAll("\\pP|\\pS|\\pC", " ");
-////		            
-////		             System.out.println(noHtmlContent);
-////		        }
-////		    }finally{
-////		        reader.close();
-////		    }
+//		   String fileName = "/home/zz477/Portal_Central_African_Republic";
+//
 //		// read the file, set the doc
 //			BufferedReader reader = new BufferedReader(new FileReader(fileName));
 //			try {
 //				int scriptFlag = 0; // 0 means no script, 1 means <script>, 2 means <script ...>
 //				String line = null;
-//				String pureText = null;
+//				int i = 1;
 //				while ((line = reader.readLine()) != null) {
 //					// remove the content in <script>
 //					while (line.contains("<script") || line.contains("</script>")) {
@@ -471,19 +459,27 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 //						if (scriptFlag == 0) {
 //							if (line.contains("<script>")) {
 //								scriptFlag = 1;
-//								System.out.println(line.substring(0, line.indexOf("<script>")));
+//								System.out.println("line " + i+ ": " + line.substring(0, line.indexOf("<script>")));
 //								line = line.substring(line.indexOf("<script>") + 8);
 //							} else if (line.contains("<script")) {
 //								scriptFlag = 2;
-//								System.out.println(line.substring(0, line.indexOf("<script")));
+//								System.out.println("line " + i + ": "+ line.substring(0, line.indexOf("<script")));
 //								line = line.substring(line.indexOf("<script") + 7);
+//								if (line.contains(">")) {
+//									line = line.substring(line.indexOf(">") + 1);
+//									scriptFlag = 1;
+//								}
 //							} 
 //						}
 //					}
 //					
-//					if (scriptFlag != 0) continue;
+//					if (scriptFlag != 0) {
+//						i++;
+//						continue;
+//					}
 //					
-//					System.out.println(line);
+//					System.out.println("line " + i + ": "+ line);
+//					i++;
 //				}
 //			} finally {
 //				reader.close();
