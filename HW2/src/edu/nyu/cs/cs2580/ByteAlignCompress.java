@@ -9,10 +9,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.LinkedList;
 
-class ByteAlignCompress{
-  private List<Byte> byteList = new LinkedList<Byte>();
-  private List<Integer> intList = new LinkedList<Integer>();
+public class ByteAlignCompress{
+  private List<Byte> byteList;
+  private List<Integer> intList;
 
+  public ByteAlignCompress(){
+	byteList = new List<Byte>();
+	intList = new List<Integer>();
+  }
+  
   public void compress(List<Integer> postList){
       for(Integer para: postList){
       if(para >= 1<<21){

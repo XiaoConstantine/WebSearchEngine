@@ -93,7 +93,7 @@ public abstract class Indexer {
    * The index must reside at the directory of index_prefix, no other data can
    * be stored (either in a hidden file or in a temporary directory). We will
    * construct your index on one machine and move the index to a different
-   * machine for serving, so do NOT try to play tricks. 
+   * machine for serving, so do NOT try to play tricks[p 
    */
   public abstract void constructIndex() throws IOException;
 

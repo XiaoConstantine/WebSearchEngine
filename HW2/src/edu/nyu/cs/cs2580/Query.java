@@ -4,6 +4,10 @@ import java.util.Scanner;
 import java.util.Vector;
 
 /**
+ * query test
+ */
+
+/**
  * Representation of a user query.
  * 
  * In HW1: instructors provide this simple implementation.

@@ -23,8 +23,10 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
  */
 public class IndexerInvertedCompressed extends Indexer implements Serializable {
  private static final long serialVerisionUID = 1088111905740085031L;
-  private Map<Integer, List<Tuple> > invertList = new HashMap<String, List<Tuple> >();
+  private HashMap<String, List<Tuple> > invertList = new HashMap<String, List<Tuple> >();
   private Stemmer stemmer = new Stemmer();
+    
+//  private ByteAlignCompress bac = new ByteAlignCompress();
     
   private Map<String, Integer> _dictionary = new HashMap<String, Integer>();
  
@@ -126,7 +128,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable {
               _termDocFrequency.put(idx,0);
               List<Tuple> Idx = invertList.get(token);
               Idx.add(new Tuple(docid, idx));
-              invertList.put(idx, Idx);
+              invertList.put(token, Idx);
           }
           tokens.add(idx);
       }
@@ -196,6 +198,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable {
       }else{
           Integer idx = _dictionary.get(term);
       }*/
+      return 0;
   }
     
   private class Tuple{
