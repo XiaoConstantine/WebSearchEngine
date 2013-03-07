@@ -108,10 +108,12 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 		}
 		
 		for (String stopword: stopwords) {
+			_totalTermFrequency -= this.corpusTermFrequency(stopword);
 			dictionary.remove(stopword);
 		}
 		
 		System.out.println("Removed " + stopwords.size() + " stopwords");
+		System.out.println("Terms without stopwords: " + _totalTermFrequency);
 		
 
 		// write the idx to disk
