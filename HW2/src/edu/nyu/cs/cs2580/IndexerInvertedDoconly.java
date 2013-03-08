@@ -28,28 +28,12 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 	 * We should have a HashMap<String, Integer> to return like hw1?
 	 */
 
-	private class Pair implements Serializable {
-		private static final long serialVersionUID = 1074562905740585098L;
-		public Vector<Integer> docIDs = new Vector<Integer>(); // each docid that a token appears in
-		public int termFrequency = 0; // total number that a token appears
-		
-		public Pair() {}
-		
-		public void setPair(Vector<Integer> docIDs, int termFrequency) {
-			this.docIDs = docIDs;
-			this.termFrequency = termFrequency;
-		}
-		
-		@Override
-		public String toString() {
-			return "docIDs: " + docIDs.toString() + " term Frequency: " + Integer.toString(termFrequency);
-		}
-	}
-
-	// Maps each term to the doc-ids that it appears in
-	private Map<String, Pair> dictionary = new HashMap<String, Pair>();
-	// Maps each term appears in corpus
-	//private Map<String, Integer> termFrequency = new HashMap<String, Integer>();
+	// All unique terms
+	private Map<String, Integer> dictionary = new HashMap<String, Integer>();
+	// Maps each term to the doc-ids that it appears in, key is the index of terms
+	private Map<Integer, Vector<Integer>> invertedList = new HashMap<Integer, Vector<Integer>>();
+	// Maps the number of the times the term appears in the corpus, key is the index of terms
+	private Map<Integer, Integer> termFrequency = new HashMap<Integer, Integer>();
 	// Stores all Document in memory.
 	private Vector<Document> documents = new Vector<Document>();
 
@@ -96,23 +80,23 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 		
 		System.out.println("Finish indexing " + _numDocs + " files");
 		System.out.println("Terms: " + _totalTermFrequency);
-		System.out.println("Unique terms: " + dictionary.keySet().size());
+		System.out.println("Unique terms: " + dictionary.size());
 		
 		// remove the stop words
-		Vector<String> stopwords = new Vector<String>();
+		int removedNum = 0;
+		int idx = -1;
 		for (String stopword: dictionary.keySet()) {
-			if ((float) dictionary.get(stopword).termFrequency / _totalTermFrequency > 0.06) {
-				//termFrequency.remove(stopword);
-				stopwords.add(stopword);
+			idx = dictionary.get(stopword);
+			if ((float) termFrequency.get(idx) / _totalTermFrequency > 0.06) {
+				removedNum++;
+				_totalTermFrequency -= corpusTermFrequency(stopword);
+				termFrequency.remove(idx);
+				invertedList.remove(idx);
 			}
 		}
 		
-		for (String stopword: stopwords) {
-			_totalTermFrequency -= this.corpusTermFrequency(stopword);
-			dictionary.remove(stopword);
-		}
 		
-		System.out.println("Removed " + stopwords.size() + " stopwords");
+		System.out.println("Removed " + removedNum + " stopwords");
 		System.out.println("Terms without stopwords: " + _totalTermFrequency);
 		
 
@@ -233,7 +217,7 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 				
 				if (scriptFlag != 0) continue;
 				
-				// parse the content, add them into dictionary
+				// parse the content, add them into invertedList
 				processWikiDoc(line, docid);
 			}
 			documents.add(docid, doc);
@@ -256,7 +240,7 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 		
 		while (s.hasNext()) {
 			String token = stem(s.next());
-			// 
+			// only consider numbers and english
 			if (token.matches("[0-9a-z]*") == false) continue;
 			// check the stemmed token
 			processWord(token, docid);	
@@ -270,20 +254,24 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 	 * @param docid
 	 */
 	public void processWord(String token, int docid) {
-		Pair tmpPair = new Pair();
+		
 		Vector<Integer> tmp;
+		int idx = -1;
 		if (dictionary.containsKey(token)) {
-			tmp = dictionary.get(token).docIDs;
+			idx = dictionary.get(token);
+			tmp = invertedList.get(idx);
 			if (tmp.contains(docid) == false){
 				tmp.add(docid); // add the doc to the term's appearance list
+				invertedList.put(idx, tmp);
 			}
-			tmpPair.setPair(tmp, dictionary.get(token).termFrequency + 1);
-			dictionary.put(token, tmpPair);
+			termFrequency.put(idx, termFrequency.get(idx) + 1);
 		} else { // new term
+			idx = dictionary.keySet().size();
 			tmp = new Vector<Integer>();
 			tmp.add(docid); // add the doc to the term's appearance list
-			tmpPair.setPair(tmp, 1);
-			dictionary.put(token, tmpPair);
+			dictionary.put(token, idx);
+			invertedList.put(idx, tmp);
+			termFrequency.put(idx, 1);
 		}	
 		++_totalTermFrequency;
 	}
@@ -312,11 +300,12 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 	    IndexerInvertedDoconly loaded = (IndexerInvertedDoconly) reader.readObject();
 
 	    this.documents = loaded.documents;
-	    this._numDocs = documents.size();
 	    this.dictionary = loaded.dictionary;
-	    //this.termFrequency = loaded.termFrequency;
+	    this.invertedList = loaded.invertedList;
+	    this.termFrequency = loaded.termFrequency;
 	    
-	    for (String term : loaded.dictionary.keySet()) {
+	    this._numDocs = documents.size();
+	    for (String term : dictionary.keySet()) {
 	      this._totalTermFrequency += this.corpusTermFrequency(term);
 	    }
 	    
@@ -330,7 +319,9 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 	    while(iter.hasNext()){
 	    	String term = iter.next();
             if(term.equals("bing")){
-	    	System.out.println(term + " " + this.dictionary.get(term).docIDs.size() + this.dictionary.get(term).toString());
+            	int idx = dictionary.get(term);
+            	System.out.println(term + " " + this.invertedList.get(idx).size() 
+            						+ " " + this.invertedList.get(idx).toString());
             }
 	    	
 	    }
@@ -368,11 +359,12 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 	public int next(String term, int docid) {
 		if (dictionary.containsKey(term) == false) return -1;
 		else {
-			Vector<Integer> list = dictionary.get(term).docIDs;
+			int idx = dictionary.get(term);
+			Vector<Integer> list = invertedList.get(idx);
 			int length = list.size();
 			if (docid > list.get(length - 1)) return -1;
 			if (docid < list.get(0)) return list.get(0);
-			return list.get(binarySearch(term, 0, length - 1, docid));
+			return list.get(binarySearch(idx, 0, length - 1, docid));
 		}
 	}
 	
@@ -384,11 +376,11 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 	 * @param docid
 	 * @return the position
 	 */
-	public int binarySearch(String term, int low, int high, int docid) {
+	public int binarySearch(int idx, int low, int high, int docid) {
 		int mid = 0;
 		while (high - low > 1) {
 			mid = (low + high) / 2;
-			if (docid >= dictionary.get(term).docIDs.get(mid)) low = mid;
+			if (docid >= invertedList.get(idx).get(mid)) low = mid;
 			else high = mid;
 		}
 		return high;
@@ -421,12 +413,12 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 	
 	@Override
 	public int corpusDocFrequencyByTerm(String term) {
-		return dictionary.get(term).docIDs.size();
+		return invertedList.get(dictionary.get(term)).size();
 	}
 
 	@Override
 	public int corpusTermFrequency(String term) {
-		return dictionary.get(term).termFrequency;
+		return termFrequency.get(dictionary.get(term));
 	}
 
 	@Override
