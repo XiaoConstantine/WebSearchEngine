@@ -305,8 +305,8 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 	    this.termFrequency = loaded.termFrequency;
 	    
 	    this._numDocs = documents.size();
-	    for (String term : dictionary.keySet()) {
-	      this._totalTermFrequency += this.corpusTermFrequency(term);
+	    for (int freq : termFrequency.values()) {
+	      this._totalTermFrequency += freq;
 	    }
 	    
 	    reader.close();
@@ -413,12 +413,14 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 	
 	@Override
 	public int corpusDocFrequencyByTerm(String term) {
-		return invertedList.get(dictionary.get(term)).size();
+		if (dictionary.containsKey(term)) return invertedList.get(dictionary.get(term)).size();
+		else return 0;
 	}
 
 	@Override
 	public int corpusTermFrequency(String term) {
-		return termFrequency.get(dictionary.get(term));
+		if (dictionary.containsKey(term)) return termFrequency.get(dictionary.get(term));
+		else return 0;
 	}
 
 	@Override
