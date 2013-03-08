@@ -36,9 +36,15 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
         private static final long serialVersionUID = 1074551805740585098L;
         int docid;
         int pos;
-        public Tuple(int doc, int pos){
+        public Tuple(int docid, int pos){
             this.docid = docid;
             this.pos = pos;
+        }
+        public int getDocId(){
+            return this.docid;
+        }
+        public int getPos(){
+            return this.pos;
         }
     }
     //All unique terms appeared in corpus. Offsets are integer representation.
@@ -95,6 +101,12 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
                 _totalTermFrequency--;
             }
         }
+        
+        /*List<Tuple> l = invertList.get("bing");
+        for(Tuple t: l){
+            
+            System.out.println("docid: " + t.getDocId() + " pos: " + t.getPos());
+        }*/
         System.out.println(
                            "Indexed " + Integer.toString(_numDocs) + " docs with " +
                            Long.toString(_totalTermFrequency) + " terms.");
@@ -228,8 +240,10 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
                 _termCorpusFrequency.put(idx,0);
                 _termDocFrequency.put(idx,0);
                 List<Tuple> Idx = new ArrayList<Tuple>();
-                Idx.add(new Tuple(docid,pos));
+                Tuple tuple = new Tuple(docid,pos);
+                Idx.add(tuple);
                 invertList.put(token,Idx);
+
             }
             pos++;
             tokens.add(idx);
@@ -262,7 +276,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
             pos++;
             tokens.add(idx);
         }
-
+        
     }
     
     private void updateStatistics(Vector<Integer> tokens, Set<Integer> uniques){
