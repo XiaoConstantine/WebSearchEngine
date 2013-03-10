@@ -1,6 +1,7 @@
 package edu.nyu.cs.cs2580;
 
 import java.util.Vector;
+import java.io.Serializable;
 
 /**
  * @CS2580: implement this class for HW2 to incorporate any additional
