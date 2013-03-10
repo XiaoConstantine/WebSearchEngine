@@ -15,7 +15,6 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Vector;
 
-
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
 /**
@@ -47,16 +46,15 @@ public class IndexerInvertedDoconly extends Indexer {
 	public IndexerInvertedDoconly(Options options) {
 		super(options);
 		System.out.println("Using Indexer: " + this.getClass().getSimpleName());
+		// 6 dictionary maps
+		// map 0 for terms start with a-e, map 1 for terms start with f-j, map 2 for terms start with k-o,
+		// map 3 for terms start with p-t, map 4 for terms start with u-z, map 5 for numbers
+		for (int i = 0; i < 6; ++i)	dicts.add(new HashMap<String, Vector<Integer>>());
 	}
 
 	@Override
 	public void constructIndex() throws IOException {
 		String dirPath = _options._corpusPrefix; // simple directory
-		
-		// 6 dictionary maps
-		// map 0 for terms start with a-e, map 1 for terms start with f-j, map 2 for terms start with k-o,
-		// map 3 for terms start with p-t, map 4 for terms start with u-z, map 5 for numbers
-		for (int i = 0; i < 6; ++i)	dicts.add(new HashMap<String, Vector<Integer>>());
 		
 		if (dirPath.contains("simple")) {
 			// for simple corpus
@@ -622,7 +620,7 @@ public class IndexerInvertedDoconly extends Indexer {
 		loadTermFrequency();
 		loadDocuments();
 
-	    System.out.println(documents.size() + " files loaded " +
+	    System.out.println(_numDocs + " files loaded " +
 	    		"with " + Long.toString(_totalTermFrequency) + " terms!");
 	    
 //	    System.out.println("zoo: " + corpusTermFrequency("zoo"));
@@ -669,7 +667,6 @@ public class IndexerInvertedDoconly extends Indexer {
 	    	documents.add(doc);
 	    }
 	    _numDocs = documents.size();
-	    
 	}
 	
 	@Override
@@ -685,15 +682,19 @@ public class IndexerInvertedDoconly extends Indexer {
 	public Document nextDoc(Query query, int docid) {
 		Vector<String> words = query._tokens;
 		Vector<Integer> indices = new Vector<Integer>();
-		
+		//System.out.println("docid is " + docid);
 		for (String word : words) {
 			word = stem(word);
 			int id = next(word, docid);
+			//System.out.println(word + " in doc " + id);
 			if (id == -1) return null;
 			else indices.add(id);
 		}
-		
-		if (allEquals(indices) == true) return documents.get(docid);
+		//System.out.println(indices.toString() + " " + allEquals(indices));
+		if (allEquals(indices) == true) {
+			//System.out.println("all in " + indices.get(0));
+			return documents.get(indices.get(0));
+		}
 		else return nextDoc(query, maxID(indices) - 1);
 	}
 
@@ -705,54 +706,62 @@ public class IndexerInvertedDoconly extends Indexer {
 	 */
 	public int next(String term, int docid) {
 		if (termFrequency.containsKey(term) == false) return -1;
-		
+
 		String initial, fileName;
+		HashMap<String, Vector<Integer>> dict;
 		int idx = (term.charAt(0) - 'a') / 5;
 		
 		switch (idx) {
 			case 0: 
 				initial = "a";
+				dict = dicts.get(0);
 				break;
 			case 1: 
 				initial = "f";
+				dict = dicts.get(1);
 				break;
 			case 2:
 				initial = "k";
+				dict = dicts.get(2);
 				break;
 			case 3:
 				initial = "p";
+				dict = dicts.get(3);
 				break;
 			case 4:
 			case 5:
 				initial = "u";
+				dict = dicts.get(4);
 				break;
 			default:
 				initial = "num";
+				dict = dicts.get(5);
 				break;
 		}
-		
-		fileName = _options._indexPrefix + "/" + initial + ".idx";
-		
 		try {
-			BufferedReader br = new BufferedReader(new FileReader(fileName));
-			String record;
-			Vector<Integer> list = new Vector<Integer>();
-			while ((record = br.readLine()) != null) {
-				String[] results = record.split(";");
-				if (results[0].equals(term)) {
+			fileName = _options._indexPrefix + "/" + initial + ".idx";
+
+			if (dict.isEmpty()) { // load the map
+				BufferedReader br = new BufferedReader(new FileReader(fileName));
+				String record;
+				Vector<Integer> list = new Vector<Integer>();
+				while ((record = br.readLine()) != null) {
+					String[] results = record.split(";");
 					String[] ids = results[1].split(" ");
 					for (int i = 1; i < ids.length; ++i) { // ids[0] is empty
 						list.add(Integer.parseInt(ids[i]));
 					}
-					break;
+					dict.put(results[0], list);
 				}
+				br.close();
+				System.out.println("Loaded " + fileName);
 			}
-			br.close();
-	
-			int length = list.size();
-			if (docid > list.get(length - 1)) return -1;
-			if (docid < list.get(0)) return list.get(0);
-			return list.get(binarySearch(term, 0, length - 1, docid, list));
+		
+			Vector<Integer> ids = dict.get(term);
+			int length = ids.size();
+			if (docid >= ids.get(length - 1)) return -1;
+			if (docid < ids.get(0)) return ids.get(0);
+			return ids.get(binarySearch(term, 0, length - 1, docid, ids));
 		} catch (Exception e) {
 			e.printStackTrace();
 			return -1;
@@ -784,7 +793,10 @@ public class IndexerInvertedDoconly extends Indexer {
 	 */
 	public boolean allEquals(Vector<Integer> ids) {
 		for (int i = 0; i < ids.size() - 1; ++i) {
-			if (ids.get(i) != ids.get(i + 1)) return false;
+			if (ids.get(i).intValue() != ids.get(i + 1).intValue()) {
+				//System.out.println(ids.get(i) + " != " + ids.get(i + 1));
+				return false;
+			}
 		}
 		return true;
 	}
@@ -796,7 +808,7 @@ public class IndexerInvertedDoconly extends Indexer {
 	 */
 	public int maxID(Vector<Integer> ids) {
 		int max = 0;
-		for (int i = 0; i < ids.size() - 1; ++i) {
+		for (int i = 0; i < ids.size(); ++i) {
 			if (ids.get(i) > max) max = ids.get(i);
 		}
 		return max;
@@ -807,48 +819,57 @@ public class IndexerInvertedDoconly extends Indexer {
 		if (termFrequency.containsKey(term) == false) return 0;
 		
 		String initial, fileName;
+		HashMap<String, Vector<Integer>> dict;
 		int idx = (term.charAt(0) - 'a') / 5;
 		
 		switch (idx) {
 			case 0: 
 				initial = "a";
+				dict = dicts.get(0);
 				break;
 			case 1: 
 				initial = "f";
+				dict = dicts.get(1);
 				break;
 			case 2:
 				initial = "k";
+				dict = dicts.get(2);
 				break;
 			case 3:
 				initial = "p";
+				dict = dicts.get(3);
 				break;
 			case 4:
 			case 5:
 				initial = "u";
+				dict = dicts.get(4);
 				break;
 			default:
-				initial = "num";	
+				initial = "num";
+				dict = dicts.get(5);
 				break;
 		}
-		
-		fileName = _options._indexPrefix + "/" + initial + ".idx";
-		
 		try {
-			BufferedReader br = new BufferedReader(new FileReader(fileName));
+		
+			fileName = _options._indexPrefix + "/" + initial + ".idx";
 			
-			String record;
-			while ((record = br.readLine()) != null) {
-				String[] results = record.split(";");
-				if (results[0].equals(term)) {
+			if (dict.isEmpty()) { // load the map
+				BufferedReader br = new BufferedReader(new FileReader(fileName));
+				String record;
+				Vector<Integer> list = new Vector<Integer>();
+				while ((record = br.readLine()) != null) {
+					String[] results = record.split(";");
 					String[] ids = results[1].split(" ");
-//					System.out.print("[ ");
-//					for(int i = 1; i < ids.length; ++i) System.out.print(ids[i] + " ");
-//					System.out.print(" ]\n");
-					return ids.length - 1; // ids[0] is empty
+					for (int i = 1; i < ids.length; ++i) { // ids[0] is empty
+						list.add(Integer.parseInt(ids[i]));
+					}
+					dict.put(results[0], list);
 				}
+				br.close();
+				System.out.println("Loaded " + fileName);
 			}
-			br.close();
-			return 0;
+			
+			return dict.get(term).size();
 		} catch (Exception e) {
 			e.printStackTrace();
 			return 0;
