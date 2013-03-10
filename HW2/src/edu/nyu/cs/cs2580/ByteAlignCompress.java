@@ -8,8 +8,10 @@ package edu.nyu.cs.cs2580;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.LinkedList;
+import java.io.Serializable;
 
-public class ByteAlignCompress{
+public class ByteAlignCompress implements Serializable{
+  private static final long serialVerisionUID = 1099111905740087931L;  
   private List<Byte> byteList;
   private List<Integer> intList;
 
@@ -18,7 +20,28 @@ public class ByteAlignCompress{
 	intList = new ArrayList<Integer>();
   }
   
-  public void compress(List<Integer> postList){
+  public Byte compressSingle(Integer para){
+      if(para >= 1<<21){
+          byteList.add((byte)(para>>21));
+	  }
+	  para&=(1<<21)-1;
+
+	  if(para>=1<<14){
+		  byteList.add((byte)(para>>14));
+	  }
+      para&=(1<<14)-1;
+
+	  if(para>=1<<7){
+		  byteList.add((byte)(para>>7));
+	  }
+	  para&=(1<<7)-1;
+
+	  para|=128;
+	  //byteList.add(para.byteValue());
+	  return para.byteValue();
+  }
+
+  public void compressList(List<Integer> postList){
       for(Integer para: postList){
       if(para >= 1<<21){
           byteList.add((byte)(para>>21));

@@ -28,10 +28,28 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 	 * We should have a HashMap<String, Integer> to return like hw1?
 	 */
 
+	private class Pair implements Serializable {
+		private static final long serialVersionUID = 1074562905740585098L;
+		public Vector<Integer> docIDs = new Vector<Integer>(); // each docid that a token appears in
+		public int termFrequency = 0; // total number that a token appears
+		
+		public Pair() {}
+		
+		public void setPair(Vector<Integer> docIDs, int termFrequency) {
+			this.docIDs = docIDs;
+			this.termFrequency = termFrequency;
+		}
+		
+		@Override
+		public String toString() {
+			return "docIDs: " + docIDs.toString() + " term Frequency: " + Integer.toString(termFrequency);
+		}
+	}
+
 	// Maps each term to the doc-ids that it appears in
-	private Map<String, Vector<Integer>> dictionary = new HashMap<String, Vector<Integer>>();
+	private Map<String, Pair> dictionary = new HashMap<String, Pair>();
 	// Maps each term appears in corpus
-	private Map<String, Integer> termFrequency = new HashMap<String, Integer>();
+	//private Map<String, Integer> termFrequency = new HashMap<String, Integer>();
 	// Stores all Document in memory.
 	private Vector<Document> documents = new Vector<Document>();
 
@@ -69,25 +87,35 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 			File dir = new File(dirPath); 
 			File[] files = dir.listFiles(); // all the files
 			  
-			System.out.println("Indexing wiki files: " + files.length);
-			
-			for (int i = 0; i < files.length; ++i) {
+			for (int i = 0; i < 1000; ++i) {
 				processDocument(files[_numDocs], _numDocs);
 				++_numDocs;
+				if(_numDocs % 100 == 0) System.out.println("Finish parsing wiki file: " + _numDocs);
 			}
 		}
-		
-		// remove the stop words
-		for (String stopword: termFrequency.keySet()) {
-			if ((float) termFrequency.get(stopword) / _totalTermFrequency > 0.06) {
-				termFrequency.remove(stopword);
-				dictionary.remove(stopword);
-			}
-		}
-		
 		
 		System.out.println("Finish indexing " + _numDocs + " files");
 		System.out.println("Terms: " + _totalTermFrequency);
+		System.out.println("Unique terms: " + dictionary.keySet().size());
+		
+		// remove the stop words
+		Vector<String> stopwords = new Vector<String>();
+		for (String stopword: dictionary.keySet()) {
+			if ((float) dictionary.get(stopword).termFrequency / _totalTermFrequency > 0.06) {
+				//termFrequency.remove(stopword);
+				stopwords.add(stopword);
+			}
+		}
+		
+		for (String stopword: stopwords) {
+			_totalTermFrequency -= this.corpusTermFrequency(stopword);
+			dictionary.remove(stopword);
+		}
+		
+		System.out.println("Removed " + stopwords.size() + " stopwords");
+		System.out.println("Terms without stopwords: " + _totalTermFrequency);
+		
+
 		// write the idx to disk
 		String indexFile = _options._indexPrefix + "/corpus.idx";
 		ObjectOutputStream writer = new ObjectOutputStream(new FileOutputStream(indexFile));
@@ -134,26 +162,7 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 			//System.out.println(token);
 			
 			// check the stemmed token
-			Vector<Integer> tmp;
-			if (dictionary.containsKey(token)) {
-				tmp = dictionary.get(token);
-				if (tmp.contains(docid) == false){
-					tmp.add(docid); // add the doc to the term's appearance list
-					dictionary.put(token, tmp);
-				}
-			} else { // new term
-				tmp = new Vector<Integer>();
-				tmp.add(docid); // add the doc to the term's appearance list
-				dictionary.put(token, tmp);
-			}			
-			
-			if (termFrequency.containsKey(token)) {
-				termFrequency.put(token, termFrequency.get(token) + 1);
-			} else {
-				termFrequency.put(token, 1);
-			}
-			
-			++_totalTermFrequency;
+			processWord(token, docid);
 		}
 		
 		s.close();
@@ -172,30 +181,13 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 		doc.setUrl(file.getAbsolutePath());
 
 		// parse the title
-		Scanner s = new Scanner(file.getName()).useDelimiter("_");
+		String title = file.getName();
+		title = title.replaceAll("\\pP|\\pS|\\pC", " ");
+		Scanner s = new Scanner(title).useDelimiter(" ");
 		while (s.hasNext()) {
 			String token = stem(s.next());
 			// check the stemmed token
-			Vector<Integer> tmp;
-			if (dictionary.containsKey(token)) {
-				tmp = dictionary.get(token);
-				if (tmp.contains(docid) == false){
-					tmp.add(docid); // add the doc to the term's appearance list
-					dictionary.put(token, tmp);
-				}
-			} else { // new term
-				tmp = new Vector<Integer>();
-				tmp.add(docid); // add the doc to the term's appearance list
-				dictionary.put(token, tmp);
-			}	
-			
-			if (termFrequency.containsKey(token)) {
-				termFrequency.put(token, termFrequency.get(token) + 1);
-			} else {
-				termFrequency.put(token, 1);
-			}
-			
-			++_totalTermFrequency;
+			processWord(token, docid);
 		}
 		s.close();
 		
@@ -231,6 +223,10 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 							processWikiDoc(line.substring(0, line.indexOf("<script")), docid);
 							scriptFlag = 2;
 							line = line.substring(line.indexOf("<script") + 7);
+							if (line.contains(">")) {
+								line = line.substring(line.indexOf(">") + 1);
+								scriptFlag = 1;
+							}
 						} 
 					}
 				}
@@ -248,41 +244,48 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 	}
 
 	/**
-	 * process the wiki doc
+	 * Process the content of the document with docid
+	 * @param content
+	 * @param docid
 	 */
 	public void processWikiDoc(String content, int docid) {
 		String pureText;
-		pureText = content.replaceAll("<[^>]*>", " "); // remove <...>
-		pureText = pureText.replaceAll("\\pP|\\pS|\\pC", " "); // replace sign with whitespace
+		pureText = content.replaceAll("<[^>]*>", " ");
+		pureText = pureText.replaceAll("\\pP|\\pS|\\pC", " ");
 		Scanner s = new Scanner(pureText).useDelimiter(" ");
 		
 		while (s.hasNext()) {
 			String token = stem(s.next());
 			// 
-			if (token.matches("[0-9a-z]*") == false) continue; // not number or english
+			if (token.matches("[0-9a-z]*") == false) continue;
 			// check the stemmed token
-			Vector<Integer> tmp;
-			if (dictionary.containsKey(token)) {
-				tmp = dictionary.get(token);
-				if (tmp.contains(docid) == false){
-					tmp.add(docid); // add the doc to the term's appearance list
-					dictionary.put(token, tmp);
-				}
-			} else { // new term
-				tmp = new Vector<Integer>();
-				tmp.add(docid); // add the doc to the term's appearance list
-				dictionary.put(token, tmp);
-			}	
-			
-			if (termFrequency.containsKey(token)) {
-				termFrequency.put(token, termFrequency.get(token) + 1);
-			} else {
-				termFrequency.put(token, 1);
-			}
-			
-			++_totalTermFrequency;
+			processWord(token, docid);	
 		}
 		s.close();
+	}
+	
+	/**
+	 * Process a word
+	 * @param token
+	 * @param docid
+	 */
+	public void processWord(String token, int docid) {
+		Pair tmpPair = new Pair();
+		Vector<Integer> tmp;
+		if (dictionary.containsKey(token)) {
+			tmp = dictionary.get(token).docIDs;
+			if (tmp.contains(docid) == false){
+				tmp.add(docid); // add the doc to the term's appearance list
+			}
+			tmpPair.setPair(tmp, dictionary.get(token).termFrequency + 1);
+			dictionary.put(token, tmpPair);
+		} else { // new term
+			tmp = new Vector<Integer>();
+			tmp.add(docid); // add the doc to the term's appearance list
+			tmpPair.setPair(tmp, 1);
+			dictionary.put(token, tmpPair);
+		}	
+		++_totalTermFrequency;
 	}
 
 	/**
@@ -311,7 +314,7 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 	    this.documents = loaded.documents;
 	    this._numDocs = documents.size();
 	    this.dictionary = loaded.dictionary;
-	    this.termFrequency = loaded.termFrequency;
+	    //this.termFrequency = loaded.termFrequency;
 	    
 	    for (String term : loaded.dictionary.keySet()) {
 	      this._totalTermFrequency += this.corpusTermFrequency(term);
@@ -327,7 +330,7 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 	    while(iter.hasNext()){
 	    	String term = iter.next();
             if(term.equals("bing")){
-	    	System.out.println(term + " " + this.dictionary.get(term).size()+this.dictionary.get(term).toString());
+	    	System.out.println(term + " " + this.dictionary.get(term).docIDs.size() + this.dictionary.get(term).toString());
             }
 	    	
 	    }
@@ -365,7 +368,7 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 	public int next(String term, int docid) {
 		if (dictionary.containsKey(term) == false) return -1;
 		else {
-			Vector<Integer> list = dictionary.get(term);
+			Vector<Integer> list = dictionary.get(term).docIDs;
 			int length = list.size();
 			if (docid > list.get(length - 1)) return -1;
 			if (docid < list.get(0)) return list.get(0);
@@ -385,7 +388,7 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 		int mid = 0;
 		while (high - low > 1) {
 			mid = (low + high) / 2;
-			if (docid >= dictionary.get(term).get(mid)) low = mid;
+			if (docid >= dictionary.get(term).docIDs.get(mid)) low = mid;
 			else high = mid;
 		}
 		return high;
@@ -418,12 +421,12 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 	
 	@Override
 	public int corpusDocFrequencyByTerm(String term) {
-		return dictionary.get(term).size();
+		return dictionary.get(term).docIDs.size();
 	}
 
 	@Override
 	public int corpusTermFrequency(String term) {
-		return termFrequency.get(term);
+		return dictionary.get(term).termFrequency;
 	}
 
 	@Override
@@ -433,26 +436,14 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 	}
 	
 //	 public static void main(String args[]) throws IOException{
-//		   String fileName = "/home/zz477/git/WebSearchEngine/HW2/data/3D_film";
-////		   BufferedReader reader = new BufferedReader(new FileReader(filename));
-////		    String noHtmlContent = null;
-////		   try{
-////		        String line = null;
-////		        while((line = reader.readLine()) != null){
-////		            noHtmlContent = line.replaceAll("<[^>]*>", " ");
-////		            noHtmlContent = noHtmlContent.replaceAll("\\pP|\\pS|\\pC", " ");
-////		            
-////		             System.out.println(noHtmlContent);
-////		        }
-////		    }finally{
-////		        reader.close();
-////		    }
+//		   String fileName = "/home/zz477/Portal_Central_African_Republic";
+//		   
 //		// read the file, set the doc
 //			BufferedReader reader = new BufferedReader(new FileReader(fileName));
 //			try {
 //				int scriptFlag = 0; // 0 means no script, 1 means <script>, 2 means <script ...>
 //				String line = null;
-//				String pureText = null;
+//				int i = 1;
 //				while ((line = reader.readLine()) != null) {
 //					// remove the content in <script>
 //					while (line.contains("<script") || line.contains("</script>")) {
@@ -471,21 +462,34 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 //						if (scriptFlag == 0) {
 //							if (line.contains("<script>")) {
 //								scriptFlag = 1;
-//								System.out.println(line.substring(0, line.indexOf("<script>")));
+//								//System.out.println("line " + i+ ": " + line.substring(0, line.indexOf("<script>")));
 //								line = line.substring(line.indexOf("<script>") + 8);
 //							} else if (line.contains("<script")) {
 //								scriptFlag = 2;
-//								System.out.println(line.substring(0, line.indexOf("<script")));
-//								line = line.substring(line.indexOf("<script") + 7);
+//								//System.out.println("line " + i + ": "+ line.substring(0, line.indexOf("<script")));
+//								//line = line.substring(line.indexOf("<script") + 7);
+//								if (line.contains(">")) {
+//									line = line.substring(line.indexOf(">") + 1);
+//									scriptFlag = 1;
+//								}
 //							} 
 //						}
 //					}
 //					
-//					if (scriptFlag != 0) continue;
+//					if (scriptFlag != 0) {
+//						i++;
+//						continue;
+//					}
 //					
+//					//System.out.println("line " + i + ": "+ line);
+//					line = line.replaceAll("<[^>]*>", " ");
+//					line = line.replaceAll("\\pP|\\pS|\\pC", " ");
 //					System.out.println(line);
+//					i++;
 //				}
 //			} finally {
+//				fileName = fileName.replaceAll("\\pP|\\pS|\\pC", " ");
+//				System.out.println(fileName);
 //				reader.close();
 //			}
 //		   

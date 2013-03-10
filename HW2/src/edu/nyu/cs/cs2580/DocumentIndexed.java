@@ -16,4 +16,7 @@ public class DocumentIndexed extends Document {
       _indexer = indexer;
   }
 
+  public String asString(){
+	  return Integer.toString(_docid) + "\t" + getTitle() + "\t" + getUrl() + "\n";
+  }
 }
