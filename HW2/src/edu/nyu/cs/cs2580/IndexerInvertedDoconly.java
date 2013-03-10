@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Vector;
 
+
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
 /**
@@ -667,6 +668,7 @@ public class IndexerInvertedDoconly extends Indexer {
 	    	doc.setNumViews(Integer.parseInt(results[4]));
 	    	documents.add(doc);
 	    }
+	    _numDocs = documents.size();
 	    
 	}
 	
