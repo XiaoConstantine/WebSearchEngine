@@ -3,7 +3,6 @@ package edu.nyu.cs.cs2580;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -37,6 +36,8 @@ public class IndexerInvertedDoconly extends Indexer {
 	private Map<String, Integer> termFrequency = new HashMap<String, Integer>();
 	// Stores all Document in memory.
 	private Vector<Document> documents = new Vector<Document>();
+	// Track the the total term frequency of a document
+	private long docTotalTermFrequency = 0;
 
 	/**
 	 * Constructor
@@ -176,6 +177,7 @@ public class IndexerInvertedDoconly extends Indexer {
 	 */
 	public void parseDocument(String content, int docid) {
 	    Scanner s = new Scanner(content).useDelimiter("\t");
+		docTotalTermFrequency = 0;
 		
 	    String title = s.next();
 		// parse the title
@@ -188,6 +190,7 @@ public class IndexerInvertedDoconly extends Indexer {
 	    DocumentIndexed doc = new DocumentIndexed(docid,this);
 	    doc.setTitle(title);
 	    doc.setUrl(Integer.toString(docid));
+	    doc.setDocTotalTermFrequency(docTotalTermFrequency);
 	    //System.out.println("finish setting doc");
 	    documents.add(docid, doc);
 	    //System.out.println("Added doc to vector");
@@ -220,11 +223,8 @@ public class IndexerInvertedDoconly extends Indexer {
 	 * @param docid
 	 */
 	public void processDocument(File file, int docid) throws IOException {
-
-		DocumentIndexed doc = new DocumentIndexed(docid,this);
-		doc.setTitle(file.getName());
-		doc.setUrl(file.getName());
-
+		// refresh the data
+		docTotalTermFrequency = 0;
 		// parse the title
 		String title = file.getName();
 		title = title.replaceAll("\\pP|\\pS|\\pC", " ");
@@ -283,6 +283,10 @@ public class IndexerInvertedDoconly extends Indexer {
 				// parse the content, add them into invertedList
 				processWikiDoc(line, docid);
 			}
+			DocumentIndexed doc = new DocumentIndexed(docid,this);
+			doc.setTitle(file.getName());
+			doc.setUrl(file.getName());
+			doc.setDocTotalTermFrequency(docTotalTermFrequency);
 			documents.add(docid, doc);
 		} finally {
 			reader.close();
@@ -339,6 +343,7 @@ public class IndexerInvertedDoconly extends Indexer {
 			if (termFrequency.containsKey(token)) termFrequency.put(token, termFrequency.get(token) + 1);
 			else termFrequency.put(token, 1);
 		}	
+		++docTotalTermFrequency;
 		++_totalTermFrequency;
 	}
 	
