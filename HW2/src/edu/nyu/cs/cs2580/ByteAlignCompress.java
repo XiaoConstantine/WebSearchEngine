@@ -9,19 +9,20 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.LinkedList;
 import java.io.Serializable;
-
+import java.lang.Math;
 public class ByteAlignCompress implements Serializable{
   private static final long serialVerisionUID = 1099111905740087931L;  
-  private List<Byte> byteList;
-  private List<Integer> intList;
+  //private ArrayList<Byte> byteList;
+  //private List<Integer> intList;
 
-  public ByteAlignCompress(){
-	byteList = new ArrayList<Byte>();
-	intList = new ArrayList<Integer>();
-  }
+   public ByteAlignCompress(){
+//	byteList = new ArrayList<Byte>();
+//	intList = new ArrayList<Integer>();
+   }
   
-  public Byte compressSingle(Integer para){
-      if(para >= 1<<21){
+  public ArrayList<Byte> compressSingle(int para){
+      ArrayList<Byte> byteList = new ArrayList<Byte>();   
+	  /*if(para >= 1<<21){
           byteList.add((byte)(para>>21));
 	  }
 	  para&=(1<<21)-1;
@@ -37,11 +38,28 @@ public class ByteAlignCompress implements Serializable{
 	  para&=(1<<7)-1;
 
 	  para|=128;
-	  //byteList.add(para.byteValue());
-	  return para.byteValue();
+	  byte parab = (byte)(para);
+	  byteList.add(parab);
+	  return byteList;
+    */
+	  boolean first = true;
+	  if(para == 0){
+		  byteList.add((byte)(1<<7));
+	  }
+	  while(para > 0 ){
+		  byte parab = (byte)(para % 128);
+          para = para >> 7;
+		  if(first){
+			  parab |= 1 << 7;
+			  first = false;
+		  }
+		  byteList.add(parab);
+	  }
+	  return byteList;
+  
   }
 
-  public void compressList(List<Integer> postList){
+ /* public void compressList(List<Integer> postList){
       for(Integer para: postList){
       if(para >= 1<<21){
           byteList.add((byte)(para>>21));
@@ -62,11 +80,15 @@ public class ByteAlignCompress implements Serializable{
 	  byteList.add(para.byteValue());
   
      }
-  }
+  }*/
   
-   public void decompress(List<Byte> byteList){
-       for(int i = 0; i < byteList.size(); i++){
-           int temp = 0;
+   public int decompress(ArrayList<Byte> byteList){
+       if(byteList == null)
+		   return -1;
+	   
+	   int temp = 0;
+	   /*for(int i = 0; i < byteList.size(); i++){
+           //int temp = 0;
            while(byteList.get(i) > 0){
                temp = temp << 7;
                temp += byteList.get(i);
@@ -74,20 +96,38 @@ public class ByteAlignCompress implements Serializable{
            }
            temp = temp << 7;
            temp += byteList.get(i)&127;
-           intList.add(temp);
-       }
+          // intList.add(temp);
+       }*/
+		temp += (int)(byteList.get(0)&((1<<7)-1));
+		for(int i = 1; i<byteList.size();i++){
+			temp += byteList.get(i)*((int)Math.pow(128,i));
+		}
+	   return temp;
    }
-    
-    /*public static void main(String args[]){
+  
+   public int decompressID(ArrayList<Byte> byteList){
+	   if(byteList.size() == 0)
+		   System.out.println("No doc id inside");
+	   ArrayList<Byte> did = new ArrayList<Byte>();
+	   did.add(byteList.get(0));
+	   for(int i = 1; i < byteList.size(); i++){
+		   if((byteList.get(i)&(1<<7)) > 0)
+			   break;
+		   did.add(byteList.get(i));
+	   }
+	   return decompress(did);
+   }
+
+ /*   public static void main(String args[]){
         ByteAlignCompress b = new ByteAlignCompress();
         List<Integer> postList = new LinkedList<Integer>();
         postList.add(1);
         postList.add(6);
-        b.compress(postList);
-        for(Byte i: b.byteList){
+        ArrayList<Byte> by =  b.compressSingle(1);
+        for(Byte i:  by){
             System.out.println(Integer.toHexString(i));
         }
-        b.decompress(b.byteList);
+        /*b.decompress(b.byteList);
         for(Integer i: b.intList){
             System.out.println(Integer.toString(i));
         }

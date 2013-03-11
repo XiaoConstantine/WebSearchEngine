@@ -77,6 +77,9 @@ class IndexerFullScan extends Indexer implements Serializable {
         "Indexed " + Integer.toString(_numDocs) + " docs with " +
         Long.toString(_totalTermFrequency) + " terms.");
 
+	String qury = "google";
+	int idx = _dictionary.get(qury);
+    System.out.println(Integer.toString(_termDocFrequency.get(idx)));
     String indexFile = _options._indexPrefix + "/corpus.idx";
     System.out.println("Store index to: " + indexFile);
     ObjectOutputStream writer =
