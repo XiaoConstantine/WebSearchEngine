@@ -534,7 +534,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 				for (ArrayList<Byte> infoindex: dict.get(newTerm)) {
 					  for(Byte b: infoindex){
 						//sb.append(" " + b);
-						 bw.write(" ");
+						  bw.write(" ");
 						  bw.write(b);
 				  }
 
@@ -628,7 +628,20 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
    */
   @Override
   public Document nextDoc(Query query, int docid) {
-    return null;
+      query = (QueryPhrase)query;
+	  Vector<String> query_list = query._tokens;
+	  Vector<Vector<String>> phrase = new Vector<Vector<String>>();
+	  
+	  if(query.startIndex != null){
+         for(int i = 0; i < startIndex.size(); i++){
+	       for(int j = startIndex.get(i); j<=endIndex.get(i); j++){
+			   Vector<String> tmp = new Vector<String>();
+			   tmp.add(query_list.get(j));
+		   }
+		   phrase.add(tmp);
+	}
+	  
+	  return null;
   }
 
   @Override
@@ -647,6 +660,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
    */
   @Override
   public int documentTermFrequency(String term, String url) {
-    return 0;
+      
+	  return 0;
   }
 }
