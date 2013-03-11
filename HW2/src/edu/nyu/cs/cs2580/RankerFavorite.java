@@ -35,7 +35,7 @@ public class RankerFavorite extends Ranker {
                 String term = qv.get(i);
                 String id = (new Integer(docid)).toString();
                 double termlike = (double)_indexer.corpusTermFrequency(term) / (double)_indexer.totalTermFrequency();
-                double doclike = (double)_indexer.documentTermFrequency(term,id) / (double)doc.getDocTotalTermFrequency();
+                double doclike = (double)doc.getDocTermFrenquency().get(term) / (double)doc.getDocTotalTermFrequency();
                 score += Math.log((1 - lambda)*doclike + lambda*termlike);
             }
             score = Math.pow(Math.E,score);

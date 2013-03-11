@@ -29,11 +29,24 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
 public class IndexerInvertedOccurrence extends Indexer implements Serializable {
     
     private static final long serialVerisionUID = 1088111905740087931L;
+<<<<<<< HEAD
     
     //private Map<Integer, LinkedList<Tuple> > invertIndex = new HashMap<Integer,LinkedList<Tuple>>();
     //DS: <term,<docid1,pos1,pos2,...> <docid2,pos1,pos2,...>>
     private Map<String, ArrayList<ArrayList<Integer>>> invertedIndex = new HashMap<String,ArrayList<ArrayList<Integer>>>();
     
+=======
+   
+	/*The first one is very clear but very inefficient
+	 *Impove Tupe into:
+	 *docid->list(occur1, occur2,.....)
+	 *Meanwhile, we dont want to store the whole string in the Map 
+	 *Just use int_representation
+	 * */
+//    private Map<String, List<Tuple>> invertList = new HashMap<String, List<Tuple>>();
+    private Map<Integer, LinkedList<Tuple> > invertIndex = new HashMap<Integer,LinkedList<Tuple>>();
+
+>>>>>>> cbbec08a33f4adcded05c93e01108d8bd3a2dfdc
     //Maps each term to their integer representation
     //private Map<String, Integer> _dictionary = new HashMap<String, Integer>();
     
@@ -46,6 +59,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
             this.docid = docid;
             this.pos.add(pos);
         }
+<<<<<<< HEAD
         
 		public int getTupleID(){
 			return this.docid;
@@ -55,6 +69,17 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
 			return this.pos;
 		}
         
+=======
+
+		public int getTupleID(){
+			return this.docid;
+		}
+
+		public List<Integer> getTupleList(){
+			return this.pos;
+		}
+
+>>>>>>> cbbec08a33f4adcded05c93e01108d8bd3a2dfdc
 		public String toString(){
 			String content = "";
 			for(Integer i: this.pos){
@@ -62,10 +87,15 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
 			}
 			return Integer.toString(docid)+ " " + content + ";";
 		}
+<<<<<<< HEAD
         
     }*/
     
     
+=======
+
+    }
+>>>>>>> cbbec08a33f4adcded05c93e01108d8bd3a2dfdc
     //All unique terms appeared in corpus. Offsets are integer representation.
     private Vector<String> _terms = new Vector<String>();
     
@@ -122,6 +152,22 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
                 System.out.println("round" + i + "\n");
 			}
         }
+<<<<<<< HEAD
+=======
+       /*In hashmap better to use iterator to remove element(In case of thread safe)*/
+       /* Iterator itr = invertList.keySet().iterator();
+	    while(itr.hasNext()){
+            for(Integer swIntPresentation: _termCorpusFrequency.keySet()){
+            String term = _terms.get(swIntPresentation);
+            if((float)_termCorpusFrequency.get(swIntPresentation) / _totalTermFrequency > 0.06){
+                System.out.println("test stop word");
+                itr.remove(term);
+                _totalTermFrequency--;
+            }
+			itr.next();
+         }
+		}*/
+>>>>>>> cbbec08a33f4adcded05c93e01108d8bd3a2dfdc
         for(Integer swIntPresentation: _termCorpusFrequency.keySet()){
             String term = _terms.get(swIntPresentation);
             if((float)_termCorpusFrequency.get(swIntPresentation) / _totalTermFrequency > 0.06){
@@ -136,8 +182,69 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
                            Long.toString(_totalTermFrequency) + " terms.");
         String indexFile = _options._indexPrefix + "/corpus.idx";
         System.out.println("Store index to: " + indexFile);
+<<<<<<< HEAD
+=======
+       /* FileWriter fWriter = new FileWriter(indexFile);
+		BufferedWriter writer = new BufferedWriter(fWriter);
+		writer.write(Integer.toString(_numDocs) + " " + Integer.toString(_totalTermFrequency));
+		for(Document doc: _documents){
+			writer.write((DocumentIndexed)doc.toString());
+		}
+		writer.flush();
+        for(Integer idx: invertIndex.keySet()){
+			for(Tuple tup: idx.get(tup)){
+				writer.write(Integer.toString(idx) + tup.toString());
+			}
+			writer.newLine();
+		}
+		writer.flush();
+		writer.close();
+		*/
+       //processWriting(indexFile);
+>>>>>>> cbbec08a33f4adcded05c93e01108d8bd3a2dfdc
     }
+   
+    public void refresh(){
+		invertIndex.clear();
+	}
+
+	public void processWriting(int round) throws IOException{
+		String indexFile = _options._indexPrefix + "/" + round+"tmp.idx";
+		FileWriter fWriter = new FileWriter(indexFile);
+		BufferedWriter writer = new BufferedWriter(fWriter);
+		StringBuilder sb;
+		//sb.append(Integer.toString(_numDocs) + ";" + Long.toString(_totalTermFrequency));
+        //sb.append("\n");
+
+		//writer.write(Integer.toString(_numDocs) + " " + Long.toString(_totalTermFrequency));
+	//	for(Document doc: _documents){
+			//writer.write(((DocumentIndexed)doc).toString());
+	//		sb.append(((DocumentIndexed)doc).toString()+" ");
+  //		}
+        for(Integer idx: invertIndex.keySet()){
+			sb = new StringBuilder();
+			System.out.println(invertIndex.get(idx).size());
+			int i = 0;
+			sb.append(Integer.toString(idx) + ";");
+			for(Tuple tup: invertIndex.get(idx)){
+			    i++;
+				System.out.println("Tuple size:" + tup.getTupleList().size()+"\n");
+				sb.append(tup.toString());
+				//writer.write(Integer.toString(idx) + tup.toString());
+			   // sb.append("\n");
+			}
+			
+			System.out.println("Finished" + i+"\n");
+
+			//sb.append("\n");
+			writer.write(sb.toString() + "\n");	
+		}
+		writer.close();
+		refresh();
+
+	}
     
+<<<<<<< HEAD
     public void refresh(){
 		invertIndex.clear();
 	}
@@ -178,16 +285,25 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
         
 	}
     
+=======
+>>>>>>> cbbec08a33f4adcded05c93e01108d8bd3a2dfdc
     public void processMerging(int curr, int round) throws IOException{
 		System.out.println("Process merging\n");
 		File oldfile = new File(_options._indexPrefix + "/" + (curr - 1) + "tmp.idx");
 		BufferedReader br = new BufferedReader(new FileReader(oldfile));
 	    File newfile;
 		if(curr == round - 1){
+<<<<<<< HEAD
             newfile = new File(_options._indexPrefix+"/"+"final.idx");
 		}
 		else{
             newfile = new File(_options._indexPrefix + "/" + curr + "tmp.idx");
+=======
+	         newfile = new File(_options._indexPrefix+"/"+"final.idx");
+		}
+		else{
+	          newfile = new File(_options._indexPrefix + "/" + curr + "tmp.idx");
+>>>>>>> cbbec08a33f4adcded05c93e01108d8bd3a2dfdc
 		}
 		BufferedWriter bw = new BufferedWriter(new FileWriter(newfile));
 		String preRecord = br.readLine();
@@ -197,7 +313,11 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
 			StringBuilder sb = new StringBuilder();
 			String pre = preRecord.split(";")[0];
             int idx = Integer.parseInt(pre);
+<<<<<<< HEAD
             
+=======
+                 
+>>>>>>> cbbec08a33f4adcded05c93e01108d8bd3a2dfdc
 			//Integer idx = _dictionary.get(pre);
 			if(idx < keys.get(i)){
 				sb.append(preRecord);
@@ -206,6 +326,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
 			}else if(idx > keys.get(i)){
                 sb.append(Integer.toString(keys.get(i))+ ";"); 
 				for(Tuple tup: invertIndex.get(keys.get(i))){
+<<<<<<< HEAD
                     System.out.println("Tuple size:" + tup.getTupleList().size()+"\n");
                     sb.append(tup.toString());
                     bw.write(sb.toString() + "\n");
@@ -217,6 +338,19 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
                     System.out.println("Tuple size:" + tup.getTupleList().size()+"\n");
                     sb.append(tup.toString());
                 }				
+=======
+				System.out.println("Tuple size:" + tup.getTupleList().size()+"\n");
+				sb.append(tup.toString());
+				bw.write(sb.toString() + "\n");
+				i++;
+			  }
+			}else{
+				sb.append(preRecord);
+                for(Tuple tup: invertIndex.get(idx)){
+				System.out.println("Tuple size:" + tup.getTupleList().size()+"\n");
+				sb.append(tup.toString());
+			 }				
+>>>>>>> cbbec08a33f4adcded05c93e01108d8bd3a2dfdc
 				bw.write(sb.toString() + "\n");
 				preRecord = br.readLine();
                 i++;
@@ -228,14 +362,23 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
             int idx = Integer.parseInt(pre);
             sb.append(preRecord);
 			bw.write(sb.toString() + "\n");
+<<<<<<< HEAD
             preRecord = br.readLine();
+=======
+           preRecord = br.readLine();
+>>>>>>> cbbec08a33f4adcded05c93e01108d8bd3a2dfdc
 		}
 		while( i  < keys.size()){
             StringBuilder sb = new StringBuilder();
 			sb.append(Integer.toString(keys.get(i))+ ";"); 
 			for(Tuple tup: invertIndex.get(keys.get(i))){
+<<<<<<< HEAD
                 System.out.println("Tuple size:" + tup.getTupleList().size()+"\n");
                 sb.append(tup.toString());
+=======
+			System.out.println("Tuple size:" + tup.getTupleList().size()+"\n");
+			sb.append(tup.toString());
+>>>>>>> cbbec08a33f4adcded05c93e01108d8bd3a2dfdc
 			}
 			bw.write(sb.toString() + "\n");
 			i++;
@@ -245,7 +388,11 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
 		oldfile.delete();
 		refresh();
 	}
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> cbbec08a33f4adcded05c93e01108d8bd3a2dfdc
     /**
      * For parsing simple document
      * each line is a document, format as follow:
@@ -256,11 +403,19 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
     private void processSimpleDocument(String line, int docid){
         Scanner s = new Scanner(line).useDelimiter("\t");
         String title = s.next();
+		int pos = 0;
         //phrase title
+<<<<<<< HEAD
         ArrayList<String> titleTokens = new ArrayList<String>();
         phraseLine(docid, title, titleTokens," ");
         //phrase body
         ArrayList<String> bodyTokens = new ArrayList<String>();
+=======
+        ArrayList<Integer> titleTokens = new ArrayList<Integer>();
+        phraseLine(docid, title, titleTokens," ");
+        //phrase body
+        ArrayList<Integer> bodyTokens = new ArrayList<Integer>();
+>>>>>>> cbbec08a33f4adcded05c93e01108d8bd3a2dfdc
         phraseLine(docid, s.next(), bodyTokens," ");
         
         int numViews = Integer.parseInt(s.next());
@@ -271,7 +426,13 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
         doc.setNumViews(numViews);
         _documents.add(doc);
         ++_numDocs;
+<<<<<<< HEAD
         Set<String> uniqueTerms = new HashSet<String>();
+=======
+        Set<Integer> uniqueTerms = new HashSet<Integer>();
+        //updateStatistics(titleTokens,uniqueTerms);
+        //updateStatistics(bodyTokens,uniqueTerms);
+>>>>>>> cbbec08a33f4adcded05c93e01108d8bd3a2dfdc
         updateInvertedIndex(titleTokens, uniqueTerms, docid, 0);
 		updateInvertedIndex(bodyTokens, uniqueTerms, docid, titleTokens.size());
         for(Integer idx: uniqueTerms){
@@ -316,12 +477,20 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
 					if (scriptFlag == 0) {
 						if (line.contains("<script>")) {
 							// parse the no script content and check the remain string
+<<<<<<< HEAD
                             // phraseFile(docid, line.substring(0, line.indexOf("<script>")), bodyTokens);
+=======
+                           // phraseFile(docid, line.substring(0, line.indexOf("<script>")), bodyTokens);
+>>>>>>> cbbec08a33f4adcded05c93e01108d8bd3a2dfdc
 							scriptFlag = 1;
 							line = line.substring(line.indexOf("<script>") + 8);
 						} else if (line.contains("<script")) {
 							// parse the no script content and check the remain string
+<<<<<<< HEAD
                             //    phraseFile(docid,line.substring(0, line.indexOf("<script")),bodyTokens);
+=======
+                        //    phraseFile(docid,line.substring(0, line.indexOf("<script")),bodyTokens);
+>>>>>>> cbbec08a33f4adcded05c93e01108d8bd3a2dfdc
 							scriptFlag = 2;
 							line = line.substring(line.indexOf("<script") + 7);
 							if (line.contains(">")) {
@@ -356,6 +525,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
         }
     }
     
+<<<<<<< HEAD
     private void updateInvertedIndex(ArrayList<String> tokens, Set<String> uniqueTerms, int docid, int pos){
         Integer token;  
         for(int i = 0; i <tokens.size();i++){
@@ -416,6 +586,59 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
         }
 	}
     
+=======
+    private void updateInvertedIndex(ArrayList<Integer> tokens, Set<Integer> uniqueTerms, int docid, int pos){
+         Integer token;  
+		 for(int i = 0; i <tokens.size();i++){
+			  token =  tokens.get(i);
+			  uniqueTerms.add(token);
+			  LinkedList<Tuple> Idx = invertIndex.get(token);
+			  if(Idx.size() ==0  || Idx.get(Idx.size()-1).getTupleID()!=docid){	
+				     Idx.add(new Tuple(docid, pos+i));
+					 invertIndex.put(token, Idx);
+			  }else{
+				  boolean flag = false;
+                  for(Tuple tup: Idx){
+					  if(tup.getTupleID() == docid){
+						  tup.getTupleList().add(pos+i);
+						  flag = true;
+						  break;
+					  }
+				  }
+				  if(flag == false){
+					 Idx.add(new Tuple(docid, pos+i));
+				 }
+                  
+			  }
+			  ++_totalTermFrequency;
+		  }
+	}
+
+    private void phraseLine(int docid,  String content, ArrayList<Integer> tokens, String delimiter){
+        Scanner s = new Scanner(content).useDelimiter(delimiter);
+        while(s.hasNext()){
+            String token = stem(s.next());
+			int idx = -1;
+            if(_dictionary.containsKey(token)){
+                idx  = _dictionary.get(token);
+				if(invertIndex.get(idx) == null){
+					invertIndex.put(idx, new LinkedList<Tuple>());
+				}
+            }else{
+                idx = _terms.size();
+                _terms.add(token);
+                _dictionary.put(token,idx);
+                _termCorpusFrequency.put(idx,0);
+                _termDocFrequency.put(idx,0);
+                invertIndex.put(idx,new LinkedList<Tuple>());
+              
+			}
+
+            tokens.add(idx);
+        }
+	}
+   
+>>>>>>> cbbec08a33f4adcded05c93e01108d8bd3a2dfdc
     private void phraseFile(int docid, String content, ArrayList<Integer> tokens){
 		Scanner s = new Scanner(content);
         while(s.hasNext()){
@@ -439,6 +662,17 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
         
     }
     
+<<<<<<< HEAD
+=======
+   /* private void updateStatistics(ArrayList<Integer> tokens, Set<Integer> uniques){
+        for(int idx: tokens){
+            uniques.add(idx);
+            _termCorpusFrequency.put(idx,_termCorpusFrequency.get(idx)+1);
+            ++_totalTermFrequency;
+        }
+    }*/
+    
+>>>>>>> cbbec08a33f4adcded05c93e01108d8bd3a2dfdc
     public String stem(String token) {
 		token = token.toLowerCase();
 		Stemmer stemmer = new Stemmer();
@@ -457,7 +691,11 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
         
         this.invertIndex = loaded.invertIndex;
         this._documents = loaded._documents;
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> cbbec08a33f4adcded05c93e01108d8bd3a2dfdc
         this._numDocs = _documents.size();
         for (Integer freq : loaded._termCorpusFrequency.values()) {
             this._totalTermFrequency += freq;

@@ -10,9 +10,9 @@ import java.util.Scanner;
  */
 public class QueryPhrase extends Query {
 	// Store the start indices of a phrase in _tokens
-	private ArrayList<Integer> startIndex = new ArrayList<Integer>();
+	public ArrayList<Integer> startIndex = new ArrayList<Integer>();
 	// Store the end indices of a phrase in _tokens
-	private ArrayList<Integer> endIndex = new ArrayList<Integer>();
+	public ArrayList<Integer> endIndex = new ArrayList<Integer>();
 	
 	public QueryPhrase(String query) {
 		super(query);
@@ -40,4 +40,5 @@ public class QueryPhrase extends Query {
 		}
 		s.close();
 	}
+
 }

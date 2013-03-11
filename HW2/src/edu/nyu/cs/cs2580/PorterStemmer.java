@@ -17,7 +17,8 @@ import java.io.*;
  * the various stem(something) methods.
  */
 
-class Stemmer {
+class Stemmer implements Serializable {
+	private static final long serialVerisionUID = 1012111905740087931L;
 	private char[] b;
 	private int i, /* offset into b */
 	i_end, /* offset to end of stemmed word */

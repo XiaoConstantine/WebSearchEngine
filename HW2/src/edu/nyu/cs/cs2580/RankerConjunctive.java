@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Vector;
+import java.lang.Math;
 
 import edu.nyu.cs.cs2580.QueryHandler.CgiArguments;
 import edu.nyu.cs.cs2580.SearchEngine.Options;

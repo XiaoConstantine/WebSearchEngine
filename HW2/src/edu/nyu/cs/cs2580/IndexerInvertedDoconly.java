@@ -472,7 +472,7 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 			fileName = _options._indexPrefix + "/" + initial + "Tmp0.idx";
 			bw = new BufferedWriter(new FileWriter(fileName));
 			dict = dicts.get(i);
-			orderedTerms = new ArrayList<String>(dict.keySet());
+			orderedTerms = new ArrayList<String>(dict.  keySet());
 			
 			Collections.sort(orderedTerms);
 			writeIndexHelper(bw, orderedTerms, dict);
