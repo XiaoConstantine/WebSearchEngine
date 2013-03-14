@@ -21,6 +21,7 @@ import java.util.Scanner;
 import java.util.Vector;
 import java.util.Iterator;
 import java.util.Collections;
+import java.lang.ref.WeakReference;
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
 /**
@@ -121,13 +122,13 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 		bw = new BufferedWriter(new FileWriter(termFreqFile));
 		writeTermFrequency(bw);
 		bw.close();
-		
-/*		String docFile = _options._indexPrefix + "/documents.idx";
+        weakRefgc();		
+		String docFile = _options._indexPrefix + "/documents.idx";
 		System.out.println("Documents: writing to " + docFile);
 		bw = new BufferedWriter(new FileWriter(docFile));
 		writeDocuments(bw);
 		bw.close();
-		*/
+		
      
 /*	String qury = "google";
 	ArrayList<ArrayList<Byte>> infoindex = invertedList.get(qury);
@@ -313,7 +314,6 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 		   dict.put(token,posList);
 		}
 		pos++;
-		//if(termFrequency.)
 		if(termFrequency.containsKey(token) == false){
 			termFrequency.put(token,1);
 		}else{
@@ -415,22 +415,24 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 		}
 		
 		refresh();
+		weakRefgc();
   }
 
    public void writeIndexHelper(BufferedWriter bw, List<String> orderedTerms, 
 				HashMap<String, ArrayList<ArrayList<Byte> > > dict) throws IOException {
-		StringBuilder sb;
 		for (String term : orderedTerms) { // write the terms alphabetically
-			//sb = new StringBuilder();
+			//StringBuilder sb = new StringBuilder();
 			// separate term and its doc ids by semicolon
+			//sb.append(term+";");
 			bw.write(term + ";");
 			// separate the doc ids by white space
 			for (ArrayList<Byte> infoindex : dict.get(term)) {
 					for(Byte res: infoindex){
-				         bw.write(" ");
-						  bw.write(res);	
+				          //sb.append(" " + res);
+					       bw.write(" " + res);
 					}
 			}
+			//sb.append("\n");
 			bw.write("\n");
 			//bw.write(sb.toString());
 		}
@@ -494,14 +496,15 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 			//System.out.println("Write to " + newFileName);
 		}
 		
-		refresh();
+    refresh();
+   weakRefgc();
   }
   
   
 	public void mergeAndWriteIndexHelper(BufferedReader br, BufferedWriter bw, 
 				List<String> orderedTerms, HashMap<String, ArrayList<ArrayList<Byte>>> dict) throws IOException {
 		String prevRecord;
-		StringBuilder sb;
+		//StringBuilder sb;
 		int termIndex = 0;
 		prevRecord = br.readLine();
 		while ((prevRecord != null) && termIndex < orderedTerms.size()) {
@@ -509,24 +512,23 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 			String prevTerm = prevRecord.split(";")[0], newTerm = orderedTerms.get(termIndex);
 			
 			if (prevTerm.equals(newTerm)) { // merge the doc ids
-				bw.write(prevRecord);
-
-		for (ArrayList<Byte> indexinfo: dict.get(newTerm)) {
+			//	sb.append(prevRecord);
+                bw.write(prevRecord);
+		      for (ArrayList<Byte> indexinfo: dict.get(newTerm)) {
                 for(Byte b: indexinfo){
-					      //sb.append(" " + b);
-				         bw.write(" ");
-						  bw.write(b);		
-				}
-		}
-		        bw.write("\n");
+					    //sb.append(" " + b);
+						bw.write(" " + b);
+				 }
+	        	}
 				//sb.append("\n");
 				//bw.write(sb.toString());
-				prevRecord = br.readLine();
+			    bw.write("\n");	
+			  prevRecord = br.readLine();
 				termIndex++;
 			} else if (prevTerm.compareTo(newTerm) < 0) { // prevTerm is alphabetically smaller than newTerm, write prevRecord
 				//sb.append(prevRecord + "\n");
-				//bw.write(sb.toString());
 				bw.write(prevRecord + "\n");
+				//bw.write(sb.toString());
 				prevRecord = br.readLine();
 			} else if (prevTerm.compareTo(newTerm) > 0) { // prevTerm is alphabetically larger than newTerm, write newTerm
 				//sb.append(newTerm + ";");
@@ -534,14 +536,13 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 				for (ArrayList<Byte> infoindex: dict.get(newTerm)) {
 					  for(Byte b: infoindex){
 						//sb.append(" " + b);
-						  bw.write(" ");
-						  bw.write(b);
+						bw.write(" " + b);
 				  }
 
 				}
-				bw.write("\n");
 				//sb.append("\n");
 				//bw.write(sb.toString());
+				bw.write("\n");
 				termIndex++;
 			}
 			
@@ -550,9 +551,8 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 		// write the remaining records in previous index to new files
 		while (prevRecord != null) {
 			//sb = new StringBuilder();
-			//sb.append(prevRecord + "\n");
-			//bw.write(sb.toString());
-		    bw.write(prevRecord + "\n");
+			bw.write(prevRecord + "\n");
+		   // bw.write(sb.toString());
 			prevRecord = br.readLine();
 		}
 		// write the remaining current data to new files
@@ -564,21 +564,25 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 			for (ArrayList<Byte> infoindex: dict.get(term)) {
 					  for(Byte b: infoindex){
 						//sb.append(" " + b);
-					      bw.write(" ");
-						  bw.write(b);
+			             bw.write(" " + b);
 					  }
 
 			}
-			//sb.append("\n");
-			//bw.write(sb.toString());
-			bw.write("\n");
+		//	sb.append("\n");
+	    //		bw.write(sb.toString());
+		    bw.write("\n");
 			termIndex++;
 		}
   }
 
   public void refresh(){
 	for(HashMap<String, ArrayList<ArrayList<Byte>>> dict: invertList_wiki ){
-          dict.clear();
+        for(String term: dict.keySet()){
+			for(ArrayList<Byte> list: dict.get(term)){
+				list.clear();
+			}
+		}
+		dict.clear();
 	}
   }
 
@@ -586,10 +590,9 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 		StringBuilder sb;
 		// termFrequency format: term; frequency
 		for (String term : termFrequency.keySet()) {
-			sb = new StringBuilder();
-			sb.append(term + ";");
-			sb.append(termFrequency.get(term) + "\n");;
-			bw.write(sb.toString());
+			bw.write(term + ";");
+			bw.write(termFrequency.get(term) + "\n");;
+			//bw.write(sb.toString());
 		}
 	} 
 
@@ -601,21 +604,77 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 			bw.write(doc.getUrl() + ";");
 			bw.write(doc.getPageRank() + ";");
 			bw.write(doc.getNumViews() + ";");
-			bw.write(((DocumentIndexed)doc).getDocTotalTermFrequency() + ";");
-
+		 	bw.write(((DocumentIndexed)doc).getDocTotalTermFrequency() + ";");
 	  }
 
   }
 
   public void loadIndex() throws IOException, ClassNotFoundException {
-      String docFile = _options._indexPrefix + "/documents.idx";
-	  System.out.println("Load documents from: " + docFile);
-     /* 
-	  BufferedReader br = new BufferedReader(new FileReader(docFile));
-	  String record;
-	  while((record = br.readLine()) != null)
-     */
+    
+        /*if (_options._corpusPrefix.contains("simple")) {
+		    String indexFile = _options._indexPrefix + "/corpus.idx";
+		    System.out.println("Load index from: " + indexFile);
+
+		    ObjectInputStream reader =
+		        new ObjectInputStream(new FileInputStream(indexFile));
+		    IndexerInvertedDoconly loaded = (IndexerInvertedDoconly) reader.readObject();
+
+		    this.documents = loaded.documents;
+		    // Compute numDocs and totalTermFrequency b/c Indexer is not serializable.
+		    this._numDocs = documents.size();
+		    for (Integer freq : loaded.termFrequency.values()) {
+		      this._totalTermFrequency += freq;
+		    }
+		    for(int i = 0; i < this.dicts.size(); ++i) {
+		    	this.dicts.clear();
+		    	this.dicts.add(i,loaded.dicts.get(i));
+		    }
+		    
+		    reader.close();
+
+		    System.out.println(Integer.toString(_numDocs) + " documents loaded " +
+		        "with " + Long.toString(_totalTermFrequency) + " terms!");
+		} */
+	  //else {
+			loadTermFrequency();
+			loadDocuments();
+
+			System.out.println(_numDocs + " files loaded " +
+	    		"with " + Long.toString(_totalTermFrequency) + " terms!");
+	//	}
   }
+    
+  public void loadTermFrequency() throws IOException, ClassNotFoundException {
+	    String termFreqFile = _options._indexPrefix + "/termFrequency.idx";
+	    System.out.println("Load termFrequency from: " + termFreqFile);
+	    
+	    BufferedReader br = new BufferedReader(new FileReader(termFreqFile));
+	    String record;
+	    while ((record = br.readLine()) != null) {
+	    	String[] results = record.split(";");
+	    	termFrequency.put(results[0], Integer.parseInt(results[1]));
+	    	_totalTermFrequency += Integer.parseInt(results[1]);
+	    }
+  }
+	public void loadDocuments() throws IOException {
+	    String docFile = _options._indexPrefix + "/documents.idx";
+	    System.out.println("Load documents from: " + docFile);
+	    
+	    BufferedReader br = new BufferedReader(new FileReader(docFile));
+	    String record;
+	    while ((record = br.readLine()) != null) {
+	    	String[] results = record.split(";");
+	    	DocumentIndexed doc = new DocumentIndexed(Integer.parseInt(results[0]), this);
+	    	doc.setTitle(results[1]);
+	    	doc.setUrl(results[2]);
+	    	//System.out.println(documents.size() + " " + results[3]);
+	    	doc.setPageRank(Float.parseFloat(results[3]));
+	    	doc.setNumViews(Integer.parseInt(results[4]));
+	    	doc.setDocTotalTermFrequency(Long.parseLong(results[5]));
+	    	_documents.add(doc);
+	    }
+	    _numDocs = _documents.size();
+	}
 
   @Override
   public Document getDoc(int docid) {
@@ -628,31 +687,237 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
    */
   @Override
   public Document nextDoc(Query query, int docid) {
-      query = (QueryPhrase)query;
 	  Vector<String> query_list = query._tokens;
-	  Vector<Vector<String>> phrase = new Vector<Vector<String>>();
-	  
-	  if(query.startIndex != null){
-         for(int i = 0; i < startIndex.size(); i++){
-	       for(int j = startIndex.get(i); j<=endIndex.get(i); j++){
-			   Vector<String> tmp = new Vector<String>();
-			   tmp.add(query_list.get(j));
-		   }
-		   phrase.add(tmp);
-	}
-	  
-	  return null;
+      ArrayList<Integer> indices = new ArrayList<Integer>();
+	  for(String term: query_list){
+		  term = stem(term);
+		  int id = next(term, docid);
+		  if(id == -1) return null;
+		  else indices.add(id);
+	  }
+
+	  if(allEquals(indices) == true){
+		  return _documents.get(indices.get(0));
+	  }else return nextDoc(query, maxID(indices) - 1);
+  }
+  
+ /*public int nextPhrase(Query query, int docid, int pos){
+	  Document idVerify = nextDoc(query, docid - 1);
+	  if(docid != idVerify._docid){
+		  return -1;
+	  }
+	  ArrayList<Integer> posl = new ArrayList<Integer>();
+	  int id = 0;
+	  for(int i = 0; i < query._tokens.size(); i++){
+		  id = next_pos(query._tokens.get(i), docid, pos);
+		  if(id == -1)
+			  return -1;
+		  posl.add(id);
+	  }
+	  if(isPhrase(posl))
+		  return posl.get(0);
+	  else
+		  return nextPhrase(query, docid, posl.get(posl.size()-1));
+  }*/
+
+  public boolean isPhrase(ArrayList<Integer> list){
+	  if(list == null)
+		  return false;
+	  for(int i = 1; i < list.size(); i++){
+		  if(list.get(i) != list.get(i-1) +1)
+			  return false;
+	  }
+	  return true;
+  }
+
+ /* public int next_pos(String term, int docid, int pos){
+      ArrayList<ArrayList<Byte>> list = dict.get(term);
+      int next = -1;
+	  for(ArrayList<Byte> index: list){
+		  if(docid == compresser.decompressID(index)){
+             ArrayList<Integer> res = compresser.decompressList(index);
+			 for(int i = 1; i < res.size(); i++){
+				 if(pos == res.get(i)){
+			        next = res.get(i+1);
+				 }
+			 }
+		  }
+	  }
+	  return next;
+  }*/
+
+  public int next(String term, int docid){
+    if (termFrequency.containsKey(term) == false) return -1;
+	String initial, fileName;
+	HashMap<String, ArrayList<ArrayList<Byte>>> dict;
+	int idx = (term.charAt(0) - 'a') / 5;
+		
+	switch (idx) {
+		case 0: 
+			initial = "a";
+			dict = invertList_wiki.get(0);
+			break;
+		case 1: 
+			initial = "f";
+			dict = invertList_wiki.get(1);
+			break;
+		case 2:
+			initial = "k";
+			dict = invertList_wiki.get(2);
+			break;
+		case 3:
+			initial = "p";
+			dict = invertList_wiki.get(3);
+			break;
+		case 4:
+		case 5:
+			initial = "u";
+			dict = invertList_wiki.get(4);
+			break;
+		default:
+			initial = "num";
+			dict = invertList_wiki.get(5);
+			break;
+		}
+		try {
+			fileName = _options._indexPrefix + "/" + initial + ".idx";
+			if (dict.isEmpty()) { // load the map
+				BufferedReader br = new BufferedReader(new FileReader(fileName));
+				String record;
+				ArrayList<ArrayList<Byte>> list = new ArrayList<ArrayList<Byte>>();
+		    	while ((record = br.readLine()) != null) {
+					String[] results = record.split(";");
+					for(int j = 1; j < results.length; j++){
+					String[] indexinfo = results[j].split(" ");
+				    ArrayList<Byte> pos = new ArrayList<Byte>();
+					for (int i = 1; i < indexinfo.length; ++i) { // ids[0] is empty
+						pos.add((byte)Integer.parseInt(indexinfo[i]));
+						list.add(pos);
+					 }
+					}
+				    System.out.println(results[0]);	
+					dict.put(results[0], list);
+				}
+				br.close();
+				System.out.println("dict size:"+  dict.size());
+				System.out.println("Loaded " + fileName);
+			}
+	        ArrayList<ArrayList<Byte>> tmp = dict.get(term);
+			ArrayList<Integer> ids = compresser.decompressTermIDs(tmp);
+			System.out.println("Start bs!!!");
+			int length = ids.size();
+			if (docid >= ids.get(length - 1)) return -1;
+			if (docid < ids.get(0)) return ids.get(0);
+			return ids.get(binarySearch(term, 1, length - 1, docid, ids));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return -1;
+		}
+  }
+ 
+
+  private int binarySearch(String term, int low, int high, int docid, ArrayList<Integer> list){
+	  while(high - low > 1){
+		  int mid = (high - low ) /2;
+		  if(list.get(mid) <= docid) low = mid;
+		  else high = mid;
+	  }
+	  return high;
+  }
+
+  private int maxID(ArrayList<Integer> ids){
+	  int max = 0;
+	  for(int i = 0; i < ids.size(); i++){
+		  if(ids.get(i) > max) max = ids.get(i);
+	  }
+	  return max;
+  }
+
+  private boolean allEquals(ArrayList<Integer> ids){
+	  for(int i = 0; i < ids.size() - 1; i++){
+		  if(ids.get(i).intValue() != ids.get(i + 1).intValue()){
+			  return false;
+		  }
+	  }
+	  return true;
   }
 
   @Override
   public int corpusDocFrequencyByTerm(String term) {
-    return 0;
+    if (termFrequency.containsKey(term) == false) return -1;
+	String initial, fileName;
+	HashMap<String, ArrayList<ArrayList<Byte>>> dict;
+	int idx = (term.charAt(0) - 'a') / 5;
+		
+	switch (idx) {
+		case 0: 
+			initial = "a";
+			dict = invertList_wiki.get(0);
+			break;
+		case 1: 
+			initial = "f";
+			dict = invertList_wiki.get(1);
+			break;
+		case 2:
+			initial = "k";
+			dict = invertList_wiki.get(2);
+			break;
+		case 3:
+			initial = "p";
+			dict = invertList_wiki.get(3);
+			break;
+		case 4:
+		case 5:
+			initial = "u";
+			dict = invertList_wiki.get(4);
+			break;
+		default:
+			initial = "num";
+			dict = invertList_wiki.get(5);
+			break;
+		}
+		try {
+			fileName = _options._indexPrefix + "/" + initial + ".idx";
+			if (dict.isEmpty()) { // load the map
+				BufferedReader br = new BufferedReader(new FileReader(fileName));
+				String record;
+				ArrayList<ArrayList<Byte>> list = new ArrayList<ArrayList<Byte>>();
+		    	while ((record = br.readLine()) != null) {
+					String[] results = record.split(";");
+					for(int j = 1; j < results.length; j++){
+					String[] indexinfo = results[j].split(" ");
+				    ArrayList<Byte> pos = new ArrayList<Byte>();
+					for (int i = 1; i < indexinfo.length; ++i) { // ids[0] is empty
+						pos.add((byte)Integer.parseInt(indexinfo[i]));
+						list.add(pos);
+					 }
+					}
+				    System.out.println(results[0]);	
+					dict.put(results[0], list);
+				}
+				br.close();
+				System.out.println("dict size:"+  dict.size());
+				System.out.println("Loaded " + fileName);
+			}
+	        ArrayList<ArrayList<Byte>> tmp = dict.get(term);
+			ArrayList<Integer> ids = compresser.decompressTermIDs(tmp);
+		/*	System.out.println("Start bs!!!");
+			int length = ids.size();
+			if (docid >= ids.get(length - 1)) return -1;
+			if (docid < ids.get(0)) return ids.get(0);
+			return ids.get(binarySearch(term, 1, length - 1, docid, ids));
+*/        
+             return ids.size();
+		 } catch (Exception e) {
+			e.printStackTrace();
+			return -1;
+		}  
   }
 
   @Override
   public int corpusTermFrequency(String term) {
     if(termFrequency.containsKey(term)) return termFrequency.get(term);
-	  return 0;
+	else  return 0;
   }
 
   /**
@@ -660,7 +925,104 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
    */
   @Override
   public int documentTermFrequency(String term, String url) {
-      
-	  return 0;
+	  int docid  = -1;
+	  for(int  i = 0; i < _documents.size(); i++){
+		  if(url.equals(_documents.get(i).getUrl()))
+	          docid = _documents.get(i)._docid;
+			  //return documentTermFrequency(term, _documents.get(i)._docid);
+	  }
+	  return docid;
   }
+  
+  public int documentTermFrequency(String term, int docid){
+  if (termFrequency.containsKey(term) == false) return -1;
+	String initial, fileName;
+	HashMap<String, ArrayList<ArrayList<Byte>>> dict;
+	int idx = (term.charAt(0) - 'a') / 5;
+		
+	switch (idx) {
+		case 0: 
+			initial = "a";
+			dict = invertList_wiki.get(0);
+			break;
+		case 1: 
+			initial = "f";
+			dict = invertList_wiki.get(1);
+			break;
+		case 2:
+			initial = "k";
+			dict = invertList_wiki.get(2);
+			break;
+		case 3:
+			initial = "p";
+			dict = invertList_wiki.get(3);
+			break;
+		case 4:
+		case 5:
+			initial = "u";
+			dict = invertList_wiki.get(4);
+			break;
+		default:
+			initial = "num";
+			dict = invertList_wiki.get(5);
+			break;
+		}
+		try {
+			fileName = _options._indexPrefix + "/" + initial + ".idx";
+			if (dict.isEmpty()) { // load the map
+				BufferedReader br = new BufferedReader(new FileReader(fileName));
+				String record;
+				ArrayList<ArrayList<Byte>> list = new ArrayList<ArrayList<Byte>>();
+		    	while ((record = br.readLine()) != null) {
+					String[] results = record.split(";");
+					for(int j = 1; j < results.length; j++){
+					String[] indexinfo = results[j].split(" ");
+				    ArrayList<Byte> pos = new ArrayList<Byte>();
+					for (int i = 1; i < indexinfo.length; ++i) { // ids[0] is empty
+						pos.add((byte)Integer.parseInt(indexinfo[i]));
+						list.add(pos);
+					 }
+					}
+				    System.out.println(results[0]);	
+					dict.put(results[0], list);
+				}
+				br.close();
+				System.out.println("dict size:"+  dict.size());
+				System.out.println("Loaded " + fileName);
+			}
+	        ArrayList<ArrayList<Byte>> tmp = dict.get(term);
+			ArrayList<Integer> ids = compresser.decompressTermIDs(tmp);
+		    int size = -1;
+			for(ArrayList<Byte> list: tmp){
+				if(docid == compresser.decompressID(list))
+					size = list.size() - 1;
+			}
+			return size;
+            
+		} catch (Exception e) {
+			e.printStackTrace();
+			return -1;
+		}  
+  }
+  public void weakRefgc(){
+	  Object obj =new Object();
+	  WeakReference ref =  new WeakReference<Object>(obj);
+	  obj = null;
+	  while(ref.get() != null){
+		  System.gc();
+	  }
+  }
+ /* public static void main(String args[]) throws IOException{
+     Options option = new Options("conf/engine.conf");
+	 IndexerInvertedCompressed index = new IndexerInvertedCompressed(option);
+	 index.constructIndex();
+     Query query = new Query("Yahoo");
+	 query.processQuery();
+	 Document doc  = index.nextDoc(query, 5000);
+	 if(doc != null){
+	   System.out.println(doc._docid);
+	 }else{
+		 System.out.println("null");
+	 }
+  }*/
 }
