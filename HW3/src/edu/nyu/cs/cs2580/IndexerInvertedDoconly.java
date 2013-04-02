@@ -665,7 +665,7 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 		        "with " + Long.toString(_totalTermFrequency) + " terms!");
 		} else {
 			loadTermFrequency();
-			//loadDocuments();
+			loadDocuments();
 
 			System.out.println(_numDocs + " files loaded " +
 	    		"with " + Long.toString(_totalTermFrequency) + " terms!");
