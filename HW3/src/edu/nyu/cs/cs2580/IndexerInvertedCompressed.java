@@ -690,10 +690,17 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 	  Vector<String> query_list = query._tokens;
       ArrayList<Integer> indices = new ArrayList<Integer>();
 	  for(String term: query_list){
-		  term = stem(term);
-		  int id = next(term, docid);
-		  if(id == -1) return null;
-		  else indices.add(id);
+		  String[] term_array = term.split(" ");
+		  if(term_array.length > 1){
+              int id = nextPhrase(term, docid);
+			  if(id == -1) return null;
+			  else indices.add(id);
+		  }else{
+			  term = stem(term);
+			  int id = next(term, docid);
+              if(id == -1) return null;
+			  else indices.add(id);
+		  }
 	  }
 
 	  if(allEquals(indices) == true){
@@ -701,7 +708,16 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 	  }else return nextDoc(query, maxID(indices) - 1);
   }
   
- /*public int nextPhrase(Query query, int docid, int pos){
+  public int nextPhrase(Query query, int docid){
+         
+
+  }
+  
+  
+  
+  
+  
+  /*public int nextPhrase(Query query, int docid, int pos){
 	  Document idVerify = nextDoc(query, docid - 1);
 	  if(docid != idVerify._docid){
 		  return -1;

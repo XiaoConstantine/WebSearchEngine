@@ -58,15 +58,22 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 		File folder = new File(_options._corpusPrefix);
 		File[] files = folder.listFiles();
 
+        System.out.println("Read file");
 		int docid = 0;
 		int round = 0;
 		
 		// map each file name to an integer
-		for (int i = 0; i < files.length; ++i) {
+		int inValidNum = 0;
+		for (int i = 0; i < files.length; i++) {
 			// ignore the hidden files
-			if (isValidDocument(files[i])) documents.add(i, files[i].getName());
+			System.out.println(files[i].getName());
+			if(isValidDocument(files[i]) == false){
+                 inValidNum++;
+			}else{
+                 documents.add((i-inValidNum), files[i].getName());
+			}
 		}
-        
+        System.out.println("Finished read file");      
 		if(files.length % 500 == 0) round = files.length/500;
 		else round = files.length/500 + 1;
 		
@@ -74,8 +81,9 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 			for(int j = 0; j < 500 && (i*500 + j < files.length); ++j){
 				if (isValidDocument(files[docid])) {
 					processDocument(files[docid]);
-					++docid;
+					//++docid;
 				}
+				docid++;
 			}
 			writeGraph(i);
 			
