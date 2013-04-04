@@ -708,8 +708,8 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 	  }else return nextDoc(query, maxID(indices) - 1);
   }
   
-  public int nextPhrase(Query query, int docid){
-         
+  public int nextPhrase(String term, int docid){
+         return 0;
 
   }
   

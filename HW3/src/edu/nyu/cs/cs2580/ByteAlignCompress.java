@@ -148,23 +148,23 @@ public class ByteAlignCompress implements Serializable{
 	   
    }
 
-    public static void main(String args[]){
-        ByteAlignCompress b = new ByteAlignCompress();
-        List<Integer> postList = new LinkedList<Integer>();
-        postList.add(1);
-        postList.add(6);
-        ArrayList<Byte> by =  b.compressSingle(20000);
-        byte[] arr = new byte[by.size()];
-		for(int i = 0; i < by.size(); i++){
-				arr[i] = by.get(i);
-		}
-		for(byte i:  arr){
-           // System.out.println(Integer.toBinaryString(i));
-           System.out.println(i.byteValue());
-		}
-      //  b.decompress(b.byteList);
-     //   for(Integer i: b.intList){
-      ///      System.out.println(Integer.toString(i));
-       // }
-    }
+//    public static void main(String args[]){
+//        ByteAlignCompress b = new ByteAlignCompress();
+//        List<Integer> postList = new LinkedList<Integer>();
+//        postList.add(1);
+//        postList.add(6);
+//        ArrayList<Byte> by =  b.compressSingle(20000);
+//        byte[] arr = new byte[by.size()];
+//		for(int i = 0; i < by.size(); i++){
+//				arr[i] = by.get(i);
+//		}
+//		for(byte i:  arr){
+//           // System.out.println(Integer.toBinaryString(i));
+//           System.out.println(i.byteValue());
+//		}
+//      //  b.decompress(b.byteList);
+//     //   for(Integer i: b.intList){
+//      ///      System.out.println(Integer.toString(i));
+//       // }
+//    }
 }
