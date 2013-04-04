@@ -763,10 +763,17 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
                     //System.out.println(indexInfo[0]);
                     //System.out.println(indexInfo[1]);
 
+<<<<<<< HEAD
                     for(int i = 1; i < indexInfo.length; i++){
                        // System.out.println("+++++++++");
                         pos.add(Integer.parseInt(indexInfo[i]));
                         if(term.equals("zzzz")){
+=======
+                    for(int i = 1; i < indexInfo.length; ++i){
+                       // System.out.println("+++++++++");
+                        pos.add(Integer.parseInt(indexInfo[i]));
+                        if(term.equals("yahoo")){
+>>>>>>> 885fbe998b2b81775b88861bfd44ae871e996831
                             System.out.println(indexInfo[i]);
                         }
                         
@@ -785,7 +792,11 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
             ArrayList<Integer> ids = new ArrayList<Integer>();
             for(ArrayList<Integer> i : idList){
                 //System.out.println(i.get(0));
+<<<<<<< HEAD
                 ids.add(i.get(1));
+=======
+                ids.add(i.get(0));
+>>>>>>> 885fbe998b2b81775b88861bfd44ae871e996831
             }
             System.out.println("ids.size(): " + ids.size());
             //System.out.println(ids.get(1111));
@@ -924,7 +935,11 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
             System.out.println(e.getMessage());
         }
         
+<<<<<<< HEAD
         Query query = new Query("zzzz");
+=======
+        Query query = new Query("yahoo");
+>>>>>>> 885fbe998b2b81775b88861bfd44ae871e996831
         query.processQuery();
         DocumentIndexed doc = index.nextDoc(query,1);
         if(doc != null){
