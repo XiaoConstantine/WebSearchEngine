@@ -127,7 +127,7 @@ public class Spearman {
 			//System.out.println(x + " " + y);
 			xySum += (x - y) * (x - y);
 		}
-		System.out.println("xySum is " + xySum + ", n is " + (fileNums * (fileNums * fileNums - 1)));
+		//System.out.println("xySum is " + xySum + ", n is " + (fileNums * (fileNums * fileNums - 1)));
 		coefficient = 1 - ((6 * xySum) / (fileNums * (fileNums * fileNums - 1)));
 		
 		System.out.println("The Spearman correlation coefficient is:" + coefficient);
