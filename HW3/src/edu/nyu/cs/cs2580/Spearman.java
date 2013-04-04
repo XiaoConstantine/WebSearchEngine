@@ -16,11 +16,49 @@ import java.util.HashSet;
  */
 public class Spearman {
 	// store the pagerank values
-	private static HashMap<String, Double> pagerankValues = new HashMap<String, Double>();
+	private static HashMap<String, PrTuple> pagerankValues = new HashMap<String, PrTuple>();
 	// store the numview values
-	private static HashMap<String, Integer> numViewValues = new HashMap<String, Integer>();
+	private static HashMap<String, NvTuple> numViewValues = new HashMap<String, NvTuple>();
 	// store the rank of pagerank value and numview value of each file
 	private static HashMap<String, ArrayList<Double>> fileRanks = new HashMap<String, ArrayList<Double>>();
+	
+	public static class PrTuple implements Comparable<PrTuple> {
+		private String fileName;
+		private double prValue;
+		
+		public PrTuple(String fileName, double prValue) {
+			this.fileName = fileName;
+			this.prValue = prValue;
+		}
+
+		@Override
+		public int compareTo(PrTuple o) {
+			if (this.prValue == o.prValue) {
+				return this.fileName.compareTo(o.fileName);
+			} else {
+				return (this.prValue > o.prValue) ? 1 : -1;
+			}
+		}
+	}
+	
+	public static class NvTuple implements Comparable<NvTuple> {
+		private String fileName;
+		private int nvValue;
+		
+		public NvTuple(String fileName, int nvValue) {
+			this.fileName = fileName;
+			this.nvValue = nvValue;
+		}
+
+		@Override
+		public int compareTo(NvTuple o) {
+			if (this.nvValue == o.nvValue) {
+				return this.fileName.compareTo(o.fileName);
+			} else {
+				return (this.nvValue > o.nvValue) ? 1 : -1;
+			}
+		}
+	}
 	
 	/**
 	 * load data from disk.
@@ -37,7 +75,9 @@ public class Spearman {
 		while ((content = br.readLine()) != null) {
 			String[] results = content.split(":");
 			// read the content into hashmap
-			pagerankValues.put(results[0], Double.parseDouble(results[1]));
+			//pagerankValues.put(results[0], Double.parseDouble(results[1]));
+			PrTuple pr = new PrTuple(results[0], Double.parseDouble(results[1]));
+			pagerankValues.put(results[0], pr);
 		}
 		br.close();
 		
@@ -48,7 +88,9 @@ public class Spearman {
 		while ((content = br.readLine()) != null) {
 			String[] results = content.split(":");
 			// read the content into the hashmap
-			numViewValues.put(results[0], Integer.parseInt(results[1]));
+			//numViewValues.put(results[0], Integer.parseInt(results[1]));
+			NvTuple nv = new NvTuple(results[0], Integer.parseInt(results[1]));
+			numViewValues.put(results[0], nv);
 		}		
 		br.close();
 		
@@ -60,45 +102,21 @@ public class Spearman {
 	 */
 	public static void computeRanks() {
 		// sort the pagerank values and numView values in descending order without duplicates
-		ArrayList<Double> pgValues = new ArrayList<Double>(pagerankValues.values());
-		ArrayList<Integer> nvValues = new ArrayList<Integer>(numViewValues.values());
+		ArrayList<PrTuple> prValues = new ArrayList<PrTuple>(pagerankValues.values());
+		ArrayList<NvTuple> nvValues = new ArrayList<NvTuple>(numViewValues.values());
 		
-		Collections.sort(pgValues, Collections.reverseOrder());
+		Collections.sort(prValues, Collections.reverseOrder());
 		Collections.sort(nvValues, Collections.reverseOrder());
 		//System.out.println("pagerank: " + pgValues.size() + ", numview: " + nvValues.size());
 		
 		// compute each file's rank
 		ArrayList<Double> ranks; // index 0 is pgValueRank, index 1 is nvValueRank		
 		for (String file : pagerankValues.keySet()) {
-			ranks = new ArrayList<Double>();
 			double x = 0.0, y = 0.0;
-			int firstIndex = 0, lastIndex = 0;
+			ranks = new ArrayList<Double>();
 			
-			// calculate x
-			firstIndex = pgValues.indexOf(pagerankValues.get(file));
-			lastIndex = pgValues.lastIndexOf(pagerankValues.get(file));
-			
-			if (firstIndex == lastIndex) x = firstIndex; // no duplicates
-			else { // handle duplicates
-				int sum = 0;
-				for (int i = firstIndex; i <= lastIndex; ++i) {
-					sum += i;
-				}
-				x = sum / (lastIndex - firstIndex + 1);
-			}
-			
-			// calculate y
-			firstIndex = nvValues.indexOf(numViewValues.get(file));
-			lastIndex = nvValues.lastIndexOf(numViewValues.get(file));
-			
-			if (firstIndex == lastIndex) y = firstIndex; // no duplicates
-			else { // handle duplicates
-				int sum = 0;
-				for (int i = firstIndex; i <= lastIndex; ++i) {
-					sum += i;
-				}
-				y = sum / (lastIndex - firstIndex + 1);
-			}
+			x = prValues.indexOf(pagerankValues.get(file));
+			y = nvValues.indexOf(numViewValues.get(file));
 			
 			// add x and y to the map
 			ranks.add(x);
