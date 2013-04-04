@@ -123,12 +123,16 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 		writeTermFrequency(bw);
 		bw.close();
         weakRefgc();		
+<<<<<<< HEAD
 /*		String docFile = _options._indexPrefix + "/documents.idx";
+=======
+		String docFile = _options._indexPrefix + "/documents.idx";
+>>>>>>> ceb115cf40c5f56a7c1f9b0259f5dbec57b6d97a
 		System.out.println("Documents: writing to " + docFile);
 		bw = new BufferedWriter(new FileWriter(docFile));
 		writeDocuments(bw);
 		bw.close();
-		*/
+		
      
 /*	String qury = "google";
 	ArrayList<ArrayList<Byte>> infoindex = invertedList.get(qury);
@@ -642,6 +646,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 			System.out.println(_numDocs + " files loaded " +
 	    		"with " + Long.toString(_totalTermFrequency) + " terms!");
 	//	}
+<<<<<<< HEAD
   }
     
   public void loadTermFrequency() throws IOException, ClassNotFoundException {
@@ -656,6 +661,22 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 	    	_totalTermFrequency += Integer.parseInt(results[1]);
 	    }
   }
+=======
+  }
+    
+  public void loadTermFrequency() throws IOException, ClassNotFoundException {
+	    String termFreqFile = _options._indexPrefix + "/termFrequency.idx";
+	    System.out.println("Load termFrequency from: " + termFreqFile);
+	    
+	    BufferedReader br = new BufferedReader(new FileReader(termFreqFile));
+	    String record;
+	    while ((record = br.readLine()) != null) {
+	    	String[] results = record.split(";");
+	    	termFrequency.put(results[0], Integer.parseInt(results[1]));
+	    	_totalTermFrequency += Integer.parseInt(results[1]);
+	    }
+  }
+>>>>>>> ceb115cf40c5f56a7c1f9b0259f5dbec57b6d97a
 	public void loadDocuments() throws IOException {
 	    String docFile = _options._indexPrefix + "/documents.idx";
 	    System.out.println("Load documents from: " + docFile);
@@ -700,6 +721,54 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 		  return _documents.get(indices.get(0));
 	  }else return nextDoc(query, maxID(indices) - 1);
   }
+<<<<<<< HEAD
+=======
+  
+ /*public int nextPhrase(Query query, int docid, int pos){
+	  Document idVerify = nextDoc(query, docid - 1);
+	  if(docid != idVerify._docid){
+		  return -1;
+	  }
+	  ArrayList<Integer> posl = new ArrayList<Integer>();
+	  int id = 0;
+	  for(int i = 0; i < query._tokens.size(); i++){
+		  id = next_pos(query._tokens.get(i), docid, pos);
+		  if(id == -1)
+			  return -1;
+		  posl.add(id);
+	  }
+	  if(isPhrase(posl))
+		  return posl.get(0);
+	  else
+		  return nextPhrase(query, docid, posl.get(posl.size()-1));
+  }*/
+
+  public boolean isPhrase(ArrayList<Integer> list){
+	  if(list == null)
+		  return false;
+	  for(int i = 1; i < list.size(); i++){
+		  if(list.get(i) != list.get(i-1) +1)
+			  return false;
+	  }
+	  return true;
+  }
+
+ /* public int next_pos(String term, int docid, int pos){
+      ArrayList<ArrayList<Byte>> list = dict.get(term);
+      int next = -1;
+	  for(ArrayList<Byte> index: list){
+		  if(docid == compresser.decompressID(index)){
+             ArrayList<Integer> res = compresser.decompressList(index);
+			 for(int i = 1; i < res.size(); i++){
+				 if(pos == res.get(i)){
+			        next = res.get(i+1);
+				 }
+			 }
+		  }
+	  }
+	  return next;
+  }*/
+>>>>>>> ceb115cf40c5f56a7c1f9b0259f5dbec57b6d97a
 
   public int next(String term, int docid){
     if (termFrequency.containsKey(term) == false) return -1;
@@ -740,6 +809,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 				BufferedReader br = new BufferedReader(new FileReader(fileName));
 				String record;
 				ArrayList<ArrayList<Byte>> list = new ArrayList<ArrayList<Byte>>();
+<<<<<<< HEAD
 				ArrayList<Byte> pos = new ArrayList<Byte>();
 				while ((record = br.readLine()) != null) {
 					String[] results = record.split(";");
@@ -765,6 +835,27 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 		   for(Integer i : ids){
 			System.out.println(ids);
 			}
+=======
+		    	while ((record = br.readLine()) != null) {
+					String[] results = record.split(";");
+					for(int j = 1; j < results.length; j++){
+					String[] indexinfo = results[j].split(" ");
+				    ArrayList<Byte> pos = new ArrayList<Byte>();
+					for (int i = 1; i < indexinfo.length; ++i) { // ids[0] is empty
+						pos.add((byte)Integer.parseInt(indexinfo[i]));
+						list.add(pos);
+					 }
+					}
+				    System.out.println(results[0]);	
+					dict.put(results[0], list);
+				}
+				br.close();
+				System.out.println("dict size:"+  dict.size());
+				System.out.println("Loaded " + fileName);
+			}
+	        ArrayList<ArrayList<Byte>> tmp = dict.get(term);
+			ArrayList<Integer> ids = compresser.decompressTermIDs(tmp);
+>>>>>>> ceb115cf40c5f56a7c1f9b0259f5dbec57b6d97a
 			System.out.println("Start bs!!!");
 			int length = ids.size();
 			if (docid >= ids.get(length - 1)) return -1;
@@ -775,6 +866,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 			return -1;
 		}
   }
+<<<<<<< HEAD
   
   private ArrayList<Byte> convertByte(ArrayList<Byte> tmp , byte[] arr){
 	  for(byte b: arr){
@@ -783,6 +875,9 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 	  return tmp;
   }
 
+=======
+ 
+>>>>>>> ceb115cf40c5f56a7c1f9b0259f5dbec57b6d97a
 
   private int binarySearch(String term, int low, int high, int docid, ArrayList<Integer> list){
 	  while(high - low > 1){
@@ -812,13 +907,80 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 
   @Override
   public int corpusDocFrequencyByTerm(String term) {
-    return 0;
+    if (termFrequency.containsKey(term) == false) return -1;
+	String initial, fileName;
+	HashMap<String, ArrayList<ArrayList<Byte>>> dict;
+	int idx = (term.charAt(0) - 'a') / 5;
+		
+	switch (idx) {
+		case 0: 
+			initial = "a";
+			dict = invertList_wiki.get(0);
+			break;
+		case 1: 
+			initial = "f";
+			dict = invertList_wiki.get(1);
+			break;
+		case 2:
+			initial = "k";
+			dict = invertList_wiki.get(2);
+			break;
+		case 3:
+			initial = "p";
+			dict = invertList_wiki.get(3);
+			break;
+		case 4:
+		case 5:
+			initial = "u";
+			dict = invertList_wiki.get(4);
+			break;
+		default:
+			initial = "num";
+			dict = invertList_wiki.get(5);
+			break;
+		}
+		try {
+			fileName = _options._indexPrefix + "/" + initial + ".idx";
+			if (dict.isEmpty()) { // load the map
+				BufferedReader br = new BufferedReader(new FileReader(fileName));
+				String record;
+				ArrayList<ArrayList<Byte>> list = new ArrayList<ArrayList<Byte>>();
+		    	while ((record = br.readLine()) != null) {
+					String[] results = record.split(";");
+					for(int j = 1; j < results.length; j++){
+					String[] indexinfo = results[j].split(" ");
+				    ArrayList<Byte> pos = new ArrayList<Byte>();
+					for (int i = 1; i < indexinfo.length; ++i) { // ids[0] is empty
+						pos.add((byte)Integer.parseInt(indexinfo[i]));
+						list.add(pos);
+					 }
+					}
+				    System.out.println(results[0]);	
+					dict.put(results[0], list);
+				}
+				br.close();
+				System.out.println("dict size:"+  dict.size());
+				System.out.println("Loaded " + fileName);
+			}
+	        ArrayList<ArrayList<Byte>> tmp = dict.get(term);
+			ArrayList<Integer> ids = compresser.decompressTermIDs(tmp);
+		/*	System.out.println("Start bs!!!");
+			int length = ids.size();
+			if (docid >= ids.get(length - 1)) return -1;
+			if (docid < ids.get(0)) return ids.get(0);
+			return ids.get(binarySearch(term, 1, length - 1, docid, ids));
+*/        
+             return ids.size();
+		 } catch (Exception e) {
+			e.printStackTrace();
+			return -1;
+		}  
   }
 
   @Override
   public int corpusTermFrequency(String term) {
     if(termFrequency.containsKey(term)) return termFrequency.get(term);
-	  return 0;
+	else  return 0;
   }
 
   /**
@@ -826,9 +988,94 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
    */
   @Override
   public int documentTermFrequency(String term, String url) {
-      
-	  return 0;
+	  int docid  = -1;
+	  for(int  i = 0; i < _documents.size(); i++){
+		  if(url.equals(_documents.get(i).getUrl()))
+	          docid = _documents.get(i)._docid;
+			  //return documentTermFrequency(term, _documents.get(i)._docid);
+	  }
+	  return docid;
   }
+  
+  public int documentTermFrequency(String term, int docid){
+  if (termFrequency.containsKey(term) == false) return -1;
+	String initial, fileName;
+	HashMap<String, ArrayList<ArrayList<Byte>>> dict;
+	int idx = (term.charAt(0) - 'a') / 5;
+		
+	switch (idx) {
+		case 0: 
+			initial = "a";
+			dict = invertList_wiki.get(0);
+			break;
+		case 1: 
+			initial = "f";
+			dict = invertList_wiki.get(1);
+			break;
+		case 2:
+			initial = "k";
+			dict = invertList_wiki.get(2);
+			break;
+		case 3:
+			initial = "p";
+			dict = invertList_wiki.get(3);
+			break;
+		case 4:
+		case 5:
+			initial = "u";
+			dict = invertList_wiki.get(4);
+			break;
+		default:
+			initial = "num";
+			dict = invertList_wiki.get(5);
+			break;
+		}
+		try {
+			fileName = _options._indexPrefix + "/" + initial + ".idx";
+			if (dict.isEmpty()) { // load the map
+				BufferedReader br = new BufferedReader(new FileReader(fileName));
+				String record;
+				ArrayList<ArrayList<Byte>> list = new ArrayList<ArrayList<Byte>>();
+		    	while ((record = br.readLine()) != null) {
+					String[] results = record.split(";");
+					for(int j = 1; j < results.length; j++){
+					String[] indexinfo = results[j].split(" ");
+				    ArrayList<Byte> pos = new ArrayList<Byte>();
+					for (int i = 1; i < indexinfo.length; ++i) { // ids[0] is empty
+						pos.add((byte)Integer.parseInt(indexinfo[i]));
+						list.add(pos);
+					 }
+					}
+				    System.out.println(results[0]);	
+					dict.put(results[0], list);
+				}
+				br.close();
+				System.out.println("dict size:"+  dict.size());
+				System.out.println("Loaded " + fileName);
+			}
+	        ArrayList<ArrayList<Byte>> tmp = dict.get(term);
+			ArrayList<Integer> ids = compresser.decompressTermIDs(tmp);
+		    int size = -1;
+			for(ArrayList<Byte> list: tmp){
+				if(docid == compresser.decompressID(list))
+					size = list.size() - 1;
+			}
+			return size;
+            
+		} catch (Exception e) {
+			e.printStackTrace();
+			return -1;
+		}  
+  }
+  public void weakRefgc(){
+	  Object obj =new Object();
+	  WeakReference ref =  new WeakReference<Object>(obj);
+	  obj = null;
+	  while(ref.get() != null){
+		  System.gc();
+	  }
+  }
+<<<<<<< HEAD
 
   public void weakRefgc(){
 	  Object obj =new Object();
@@ -839,6 +1086,9 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 	  }
   }
   public static void main(String args[]) throws IOException{
+=======
+ /* public static void main(String args[]) throws IOException{
+>>>>>>> ceb115cf40c5f56a7c1f9b0259f5dbec57b6d97a
      Options option = new Options("conf/engine.conf");
 	 IndexerInvertedCompressed index = new IndexerInvertedCompressed(option);
 	 index.constructIndex();
@@ -850,5 +1100,9 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 	 }else{
 		 System.out.println("null");
 	 }
+<<<<<<< HEAD
   }
+=======
+  }*/
+>>>>>>> ceb115cf40c5f56a7c1f9b0259f5dbec57b6d97a
 }

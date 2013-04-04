@@ -665,7 +665,7 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 		        "with " + Long.toString(_totalTermFrequency) + " terms!");
 		} else {
 			loadTermFrequency();
-			loadDocuments();
+			//loadDocuments();
 
 			System.out.println(_numDocs + " files loaded " +
 	    		"with " + Long.toString(_totalTermFrequency) + " terms!");
@@ -935,4 +935,18 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 		SearchEngine.Check(false, "Not implemented!");
 		return 0;
 	}
+
+   public static void main(String args[]) throws IOException{
+     Options option = new Options("conf/engine.conf");
+	 IndexerInvertedDoconly index = new IndexerInvertedDoconly(option);
+	 index.constructIndex();
+     Query query = new Query("Yahoo");
+	 query.processQuery();
+	 Document doc  = index.nextDoc(query, 1);
+	 if(doc != null){
+	   System.out.println(doc._docid);
+	 }else{
+		 System.out.println("null");
+	 }
+  }
 }

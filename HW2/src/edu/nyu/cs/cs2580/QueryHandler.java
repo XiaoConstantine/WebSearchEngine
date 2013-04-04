@@ -138,7 +138,7 @@ class QueryHandler implements HttpHandler {
       respondWithMsg(exchange, "Only /search is handled!");
     }
     System.out.println("Query: " + uriQuery);
-
+       
     // Process the CGI arguments.
     CgiArguments cgiArgs = new CgiArguments(uriQuery);
     if (cgiArgs._query.isEmpty()) {
@@ -153,14 +153,23 @@ class QueryHandler implements HttpHandler {
           "Ranker " + cgiArgs._rankerType.toString() + " is not valid!");
     }
 
-    // Processing the query.
-    Query processedQuery = new QueryPhrase(cgiArgs._query);
+    //Processing the query.
+    Query processedQuery = new Query(cgiArgs._query);
     processedQuery.processQuery();
-
+//    ((IndexerInvertedCompressed)_indexer).next(cgiArgs._query, 1);
+	/*Query  processedQuery = new QueryPhrase("google");
+	processedQuery.processQuery();
+	_indexer.nextDoc(processedQuery, 0);
+*/
     // Ranking.
     Vector<ScoredDocument> scoredDocs =
         ranker.runQuery(processedQuery, cgiArgs._numResults);
-    StringBuffer response = new StringBuffer();
+    
+  /*  for(ScoredDocument sd: scoredDocs){
+         System.out.println(sd.asTextResult());
+	}*/
+	
+	StringBuffer response = new StringBuffer();
     switch (cgiArgs._outputFormat) {
     case TEXT:
       constructTextOutput(scoredDocs, response);
