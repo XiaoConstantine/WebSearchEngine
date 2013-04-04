@@ -4,4 +4,4 @@ Homework 3
 Because lambda is the chance that an user click the link in current page, thus 0.9 is more reasonable than 0.1; Since the result of PageRank algorithm will converge with the increase of iteration times, two iterations would be able to produce better results for search queries.
 
 2. For 3.1, you should type: "java -cp src edu.nyu.cs.cs2580.Spearman data/index/pagerank data/index/numView".
-The Spearman correlation coefficient is -1023.6674847973925.
+The Spearman correlation coefficient is 0.4977027717759467.
