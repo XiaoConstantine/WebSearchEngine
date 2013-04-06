@@ -67,9 +67,12 @@ public class Prf {
 		
 		for (String term : resultTerms) {
 			double prob = (double) termFrequency.get(term) / totalTermFrequency;
+			System.out.println(term + "\t" + prob + "\n");
 			bw.write(term + "\t" + prob + "\n");
 		}
+		bw.close();
 		
+		System.out.println("Finished writing to " + fileName);
 		return;
 	}
 }
