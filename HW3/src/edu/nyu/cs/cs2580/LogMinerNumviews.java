@@ -110,6 +110,8 @@ public class LogMinerNumviews extends LogMiner {
 			}
 			
 			bw.close();
+			
+			System.out.println("Finished writing to " + fileName);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

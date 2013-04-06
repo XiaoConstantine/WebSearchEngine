@@ -39,6 +39,7 @@ public class Bhattacharyya {
 	}
 	
 	public static void calculateCoef() {
+		System.out.println("Computing Bhattacharyya coefficient...");
 		for (String query1 : prfResults.keySet()) {
 			// map for storing all the pair in query1
 			HashMap<String, Double> tmpMap = new HashMap<String, Double>();
@@ -46,6 +47,7 @@ public class Bhattacharyya {
 				if (query1.equals(query2) == false) {
 					double coef = 0.0;
 					for (String term : prfResults.get(query1).keySet()) {
+						// only compute the term which is contained in both queries
 						if (prfResults.get(query2).containsKey(term)) {
 							coef += Math.sqrt(prfResults.get(query1).get(term) * prfResults.get(query2).get(term));						
 						}
@@ -69,6 +71,7 @@ public class Bhattacharyya {
 			}
 			bw.close();
 			
+			System.out.println("Finished writing to " + outputName);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

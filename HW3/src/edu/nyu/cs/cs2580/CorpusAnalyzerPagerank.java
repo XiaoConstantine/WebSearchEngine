@@ -58,7 +58,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 		File folder = new File(_options._corpusPrefix);
 		File[] files = folder.listFiles();
 
-        System.out.println("Read file");
+        //System.out.println("Read file");
 		int docid = 0;
 		int round = 0;
 		
@@ -66,14 +66,14 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 		int inValidNum = 0;
 		for (int i = 0; i < files.length; i++) {
 			// ignore the hidden files
-			System.out.println(files[i].getName());
+			//System.out.println(files[i].getName());
 			if(isValidDocument(files[i]) == false){
                  inValidNum++;
 			}else{
                  documents.add((i-inValidNum), files[i].getName());
 			}
 		}
-        System.out.println("Finished read file");      
+        //System.out.println("Finished read file");      
 		if(files.length % 500 == 0) round = files.length/500;
 		else round = files.length/500 + 1;
 		
@@ -108,7 +108,12 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 		
 		// find the links which point to the file in corpus
 		while ((outLink = extractor.getNextInCorpusLinkTarget()) != null) {
-			if (documents.contains(outLink)) outLinks.add(documents.indexOf(outLink));
+			// only handle unique links in one page
+			if (documents.contains(outLink) 
+					&& outLinks.contains(documents.indexOf(outLink)) == false) {
+				outLinks.add(documents.indexOf(outLink));
+			}
+				
 		}
 		// add the file information to the graph
 		corpusGraph.put(index, outLinks);
@@ -204,7 +209,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 		for (int i = 0; i < iteration; ++i) {
 			computePagerank();
 		}
-		System.out.println("Computing finished, start writing");
+		//System.out.println("Computing finished, start writing");
 		
 		writePagerank();
 		return;
@@ -241,7 +246,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 			
 			br.close();
 			
-			System.out.println(documents.size() + " document, " + corpusGraph.size() + " files, readGraph finished!");
+			System.out.println(corpusGraph.size() + " files, readGraph finished!");
 			
 		} catch (Exception e) {
 			e.printStackTrace();
