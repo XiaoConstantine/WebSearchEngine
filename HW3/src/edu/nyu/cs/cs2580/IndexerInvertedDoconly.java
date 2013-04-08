@@ -942,7 +942,7 @@ public class IndexerInvertedDoconly extends Indexer implements Serializable {
 	 index.constructIndex();
      Query query = new Query("Yahoo");
 	 query.processQuery();
-	 Document doc  = index.nextDoc(query, 1);
+	 Document doc  = index.nextDoc(query, 2000);
 	 if(doc != null){
 	   System.out.println(doc._docid);
 	 }else{

@@ -12,24 +12,10 @@ import java.util.Vector;
  */
 public class QueryPhrase extends Query {
    
-/*    public Vector<String[]> phrases = new Vector<String[]>();
-    public Vector<String> nonPhrase = new Vector<String>();
-
-	public Vector<String> getNonPhrase(){
-		return nonPhrase;
-	}
-
-    public Vector<String[]> getPhrases(){
-		return phrases;
-	}
-*/
 	public QueryPhrase(String query) {
 		super(query);
 	}
 
-	/*public int getPhraseCount(){
-		return phraseCount;
-	}*/
     @Override
     public void processQuery() {
         

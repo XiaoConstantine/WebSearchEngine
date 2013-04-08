@@ -29,6 +29,7 @@ public class RankerFavorite extends Ranker {
         double lambda = 0.5;
         Vector<String> qv = query._tokens;
         while ((doc = (DocumentIndexed)_indexer.nextDoc(query, docid)) != null) {
+            System.out.println("Begin runQuery: Ranker Favorite");
             //page rank
             double score = 0.0;
             for(int i = 0; i < qv.size(); i++){

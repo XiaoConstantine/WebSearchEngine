@@ -71,6 +71,7 @@ class QueryHandler implements HttpHandler {
             // Ignored, search engine should never fail upon invalid user input.
           }
         } else if (key.equals("ranker")) {
+            System.out.println("ranker:" + val);
           try {
             _rankerType = RankerType.valueOf(val.toUpperCase());
           } catch (IllegalArgumentException e) {
@@ -155,7 +156,7 @@ class QueryHandler implements HttpHandler {
     }
 
     // Processing the query.
-    Query processedQuery = new Query(cgiArgs._query);
+    Query processedQuery = new QueryPhrase(cgiArgs._query);
     processedQuery.processQuery();
 
     // Ranking.
