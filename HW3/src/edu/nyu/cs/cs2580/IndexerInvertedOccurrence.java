@@ -88,6 +88,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
             
 			if(files.length % 200 == 0) round = files.length/200;
 			else round = files.length/200 + 1;
+            System.out.println("rounds:" + round);
 			for(int i = 0; i < round; i++){
 				for(int j = 0; j < 200 && (i*200 + j < files.length); j++){
 					processWikiDocument(files[docid], docid);
@@ -98,8 +99,8 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
 					writeIndex();
                     writeDocuments(round);
 				}else{
-                    writeDocuments(round);
 					mergeAndWriteIndex(i, round);
+                    writeDocuments(round);
 				}
                 System.out.println("round" + i + "\n");
 			}
@@ -150,10 +151,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
         StringBuilder sb;
 		// termFrequency format: term; frequency
 		for (String term : termFrequency.keySet()) {
-			bw.write(term);
-            bw.write(":");
-			bw.write(termFrequency.get(term));
-            bw.write("#");
+			bw.write(term + ":" + termFrequency.get(term) + "#");
 			//bw.write(sb.toString());
 		}
     }
@@ -185,24 +183,21 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
 		}else{
 		    bw = new BufferedWriter(new FileWriter(file, true));
 		}
-        
-		for(int i = round*200; i<_documents.size(); i++){
-            bw.write(_documents.get(i)._docid);
-            bw.write(";");
-            bw.write(_documents.get(i).getTitle());
-            bw.write(";");
-			bw.write(_documents.get(i).getUrl());
-            bw.write(";");
-			bw.write(_documents.get(i).getPageRank()+ ";");
-			bw.write(_documents.get(i).getNumViews());
-            bw.write(";");
-		 	bw.write(_documents.get(i).getDocTotalTermFrequency() + ";");
-			for(String content: _documents.get(i).getDocTermFrequency().keySet()){
-				bw.write(content);
-                bw.write(";");
-				bw.write(_documents.get(i).getDocTermFrequency().get(content)/ _documents.get(i).getDocTotalTermFrequency()+";");
+        int id = round*200;
+		//for(int i = round*200; i<_documents.size(); i++){
+        for(int i = 0; i < 200 && id <_documents.size(); i++){
+            bw.write(_documents.get(id)._docid + ";");
+            bw.write(_documents.get(id).getTitle() + ";" + _documents.get(id).getUrl() + ";" 
+                     + _documents.get(id).getPageRank()+ ";" 
+                     + _documents.get(id).getNumViews() + ";" 
+                     + _documents.get(id).getDocTotalTermFrequency() + ";");
+			for(String content: _documents.get(id).getDocTermFrequency().keySet()){
+				bw.write(content + ";" 
+                         + _documents.get(id).getDocTermFrequency().get(content)/ _documents.get(id).getDocTotalTermFrequency()
+                         +";");
 			}
-			_documents.get(i).setDocTermFrequency(null);
+			_documents.get(id).setDocTermFrequency(null);
+            id++;
 		}
     }
 
@@ -246,13 +241,11 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
 		for (String term : orderedTerms) { // write the terms alphabetically
 			//sb = new StringBuilder();
 			// separate term and its doc ids by semicolon
-			bw.write(term);
-            bw.write(";");
+			bw.write(term + ";");
 			// separate the doc ids by white space
 			for (ArrayList<Integer> infoindex : dict.get(term)) {
-                for(Integer res: infoindex){
-                    bw.write(res);
-                    bw.write(" ");
+                for(int res: infoindex){
+                    bw.write(res + " ");
                     //bw.write(res);	
                 }
                 bw.write(";");
@@ -335,9 +328,8 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
 				bw.write(prevRecord);
                 
                 for (ArrayList<Integer> indexinfo: dict.get(newTerm)) {
-                    for(Integer b: indexinfo){
-                        bw.write(b);
-                        bw.write(" ");
+                    for(int b: indexinfo){
+                        bw.write(b + " ");
                     }
                     bw.write(";");
                 }
@@ -350,18 +342,15 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
 				//sb.append(prevRecord + "\n");
 				//bw.write(sb.toString());
                 
-				bw.write(prevRecord);
-                bw.write("\n");
+				bw.write(prevRecord + "\n");
 				prevRecord = br.readLine();
 			} else if (prevTerm.compareTo(newTerm) > 0) { // prevTerm is alphabetically larger than newTerm, write newTerm
 				//sb.append(newTerm + ";");
-				bw.write(newTerm);
-                bw.write(";");
+				bw.write(newTerm + ";");
 				for (ArrayList<Integer> infoindex: dict.get(newTerm)) {
-                    for(Integer b: infoindex){
+                    for(int b: infoindex){
 						//sb.append(" " + b);
-                        bw.write(b);
-                        bw.write(" ");
+                        bw.write(b + " ");
                         // bw.write(b);
                     }
                     bw.write(";");
@@ -379,8 +368,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
 			//sb = new StringBuilder();
 			//sb.append(prevRecord + "\n");
 			//bw.write(sb.toString());
-		    bw.write(prevRecord);
-            bw.write("\n");
+		    bw.write(prevRecord + "\n");
 			prevRecord = br.readLine();
 		}
 		// write the remaining current data to new files
@@ -388,13 +376,11 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
 			String term = orderedTerms.get(termIndex);
 			//sb = new StringBuilder();
 			//sb.append(term + ";");
-			bw.write(term);
-            bw.write(";");
+			bw.write(term + ";");
 			for (ArrayList<Integer> infoindex: dict.get(term)) {
-                for(Integer b: infoindex){
+                for(int b: infoindex){
                     //sb.append(" " + b);
-                    bw.write(b);
-                    bw.write(" ");
+                    bw.write(b + " ");
                     // bw.write(b);
                 }
                 bw.write(";");

@@ -33,7 +33,7 @@ public class RankerComprehensive extends Ranker {
           double score = 0.0;
           for(int i = 0; i < qv.size(); i++){
               String term = qv.get(i);
-              String terms = term.split(" ");
+              String[] terms = term.split(" ");
               if(terms.length > 1){
                   term = terms[0];
               }
