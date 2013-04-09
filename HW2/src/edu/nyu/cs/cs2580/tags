@@ -1,3 +1,0 @@
-Mode	SearchEngine.java	/^  public static enum Mode {$/
-OutputFormat	QueryHandler.java	/^    public enum OutputFormat {$/
-RankerType	QueryHandler.java	/^    public enum RankerType {$/

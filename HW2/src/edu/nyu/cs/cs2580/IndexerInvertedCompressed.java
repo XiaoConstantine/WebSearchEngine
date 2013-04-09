@@ -123,7 +123,11 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 		writeTermFrequency(bw);
 		bw.close();
         weakRefgc();		
+<<<<<<< HEAD
+/*		String docFile = _options._indexPrefix + "/documents.idx";
+=======
 		String docFile = _options._indexPrefix + "/documents.idx";
+>>>>>>> ceb115cf40c5f56a7c1f9b0259f5dbec57b6d97a
 		System.out.println("Documents: writing to " + docFile);
 		bw = new BufferedWriter(new FileWriter(docFile));
 		writeDocuments(bw);
@@ -642,6 +646,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 			System.out.println(_numDocs + " files loaded " +
 	    		"with " + Long.toString(_totalTermFrequency) + " terms!");
 	//	}
+<<<<<<< HEAD
   }
     
   public void loadTermFrequency() throws IOException, ClassNotFoundException {
@@ -656,6 +661,22 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 	    	_totalTermFrequency += Integer.parseInt(results[1]);
 	    }
   }
+=======
+  }
+    
+  public void loadTermFrequency() throws IOException, ClassNotFoundException {
+	    String termFreqFile = _options._indexPrefix + "/termFrequency.idx";
+	    System.out.println("Load termFrequency from: " + termFreqFile);
+	    
+	    BufferedReader br = new BufferedReader(new FileReader(termFreqFile));
+	    String record;
+	    while ((record = br.readLine()) != null) {
+	    	String[] results = record.split(";");
+	    	termFrequency.put(results[0], Integer.parseInt(results[1]));
+	    	_totalTermFrequency += Integer.parseInt(results[1]);
+	    }
+  }
+>>>>>>> ceb115cf40c5f56a7c1f9b0259f5dbec57b6d97a
 	public void loadDocuments() throws IOException {
 	    String docFile = _options._indexPrefix + "/documents.idx";
 	    System.out.println("Load documents from: " + docFile);
@@ -700,6 +721,8 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 		  return _documents.get(indices.get(0));
 	  }else return nextDoc(query, maxID(indices) - 1);
   }
+<<<<<<< HEAD
+=======
   
  /*public int nextPhrase(Query query, int docid, int pos){
 	  Document idVerify = nextDoc(query, docid - 1);
@@ -745,6 +768,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 	  }
 	  return next;
   }*/
+>>>>>>> ceb115cf40c5f56a7c1f9b0259f5dbec57b6d97a
 
   public int next(String term, int docid){
     if (termFrequency.containsKey(term) == false) return -1;
@@ -785,6 +809,33 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 				BufferedReader br = new BufferedReader(new FileReader(fileName));
 				String record;
 				ArrayList<ArrayList<Byte>> list = new ArrayList<ArrayList<Byte>>();
+<<<<<<< HEAD
+				ArrayList<Byte> pos = new ArrayList<Byte>();
+				while ((record = br.readLine()) != null) {
+					String[] results = record.split(";");
+					String[] indexinfo = results[1].split(" ");
+			/*		for(int i = 0; i < indexinfo.length; i++){
+						System.out.print(indexinfo[i]);
+					}*/
+					for (int i = 0; i < indexinfo.length; ++i) { // ids[0] is empty
+						ArrayList<Byte> tmp = new ArrayList<Byte>();
+						byte[] bytearr = indexinfo[i].getBytes();
+						tmp = convertByte(tmp, bytearr);
+						pos.addAll(tmp);
+						list.add(pos);
+					}
+					dict.put(results[0], list);
+				}
+				br.close();
+				System.out.println("Loaded " + fileName);
+			    weakRefgc();
+			}
+		
+			ArrayList<Integer> ids = compresser.decompressTermIDs(dict.get(term));
+		   for(Integer i : ids){
+			System.out.println(ids);
+			}
+=======
 		    	while ((record = br.readLine()) != null) {
 					String[] results = record.split(";");
 					for(int j = 1; j < results.length; j++){
@@ -804,6 +855,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 			}
 	        ArrayList<ArrayList<Byte>> tmp = dict.get(term);
 			ArrayList<Integer> ids = compresser.decompressTermIDs(tmp);
+>>>>>>> ceb115cf40c5f56a7c1f9b0259f5dbec57b6d97a
 			System.out.println("Start bs!!!");
 			int length = ids.size();
 			if (docid >= ids.get(length - 1)) return -1;
@@ -814,7 +866,18 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 			return -1;
 		}
   }
+<<<<<<< HEAD
+  
+  private ArrayList<Byte> convertByte(ArrayList<Byte> tmp , byte[] arr){
+	  for(byte b: arr){
+         tmp.add(b);
+	  }
+	  return tmp;
+  }
+
+=======
  
+>>>>>>> ceb115cf40c5f56a7c1f9b0259f5dbec57b6d97a
 
   private int binarySearch(String term, int low, int high, int docid, ArrayList<Integer> list){
 	  while(high - low > 1){
@@ -1012,7 +1075,20 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 		  System.gc();
 	  }
   }
+<<<<<<< HEAD
+
+  public void weakRefgc(){
+	  Object obj =new Object();
+	  WeakReference ref =  new WeakReference<Object>(obj);
+	  obj = null;
+	  while(ref.get() != null){
+		  System.gc();
+	  }
+  }
+  public static void main(String args[]) throws IOException{
+=======
  /* public static void main(String args[]) throws IOException{
+>>>>>>> ceb115cf40c5f56a7c1f9b0259f5dbec57b6d97a
      Options option = new Options("conf/engine.conf");
 	 IndexerInvertedCompressed index = new IndexerInvertedCompressed(option);
 	 index.constructIndex();
@@ -1024,5 +1100,9 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 	 }else{
 		 System.out.println("null");
 	 }
+<<<<<<< HEAD
+  }
+=======
   }*/
+>>>>>>> ceb115cf40c5f56a7c1f9b0259f5dbec57b6d97a
 }
