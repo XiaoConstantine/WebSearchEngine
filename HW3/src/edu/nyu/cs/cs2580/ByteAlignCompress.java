@@ -160,7 +160,7 @@ public class ByteAlignCompress implements Serializable{
 		}
 		for(byte i:  arr){
            // System.out.println(Integer.toBinaryString(i));
-           System.out.println(i.byteValue());
+        //   System.out.println(i.byteValue());
 		}
       //  b.decompress(b.byteList);
      //   for(Integer i: b.intList){

@@ -14,7 +14,7 @@ public class DocumentIndexed extends Document {
   
   private Indexer _indexer = null;
 
-  private  HashMap<String, Integer> docTermFrequency = new HashMap<String, Integer>();
+  private  HashMap<String, Double> docTermFrequency = new HashMap<String, Double>();
 
   private long docTotalTermFrequency = 0;
   
@@ -43,14 +43,14 @@ public class DocumentIndexed extends Document {
 	/**
 	 * @return the docTermFrequency
 	 */
-	public HashMap<String, Integer> getDocTermFrequency() {
+	public HashMap<String, Double> getDocTermFrequency() {
 		return docTermFrequency;
 	}
 
 	/**
 	 * @param docTermFrequency the docTermFrequency to set
 	 */
-	public void setDocTermFrequency(HashMap<String, Integer> docTermFrequency) {
+	public void setDocTermFrequency(HashMap<String, Double> docTermFrequency) {
 		this.docTermFrequency = docTermFrequency;
 	}
 	

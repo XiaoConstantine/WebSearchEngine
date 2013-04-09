@@ -692,7 +692,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 	  for(String term: query_list){
 		  String[] term_array = term.split(" ");
 		  if(term_array.length > 1){
-              int id = nextPhrase(term, docid);
+              int id =1;
 			  if(id == -1) return null;
 			  else indices.add(id);
 		  }else{
@@ -708,11 +708,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable{
 	  }else return nextDoc(query, maxID(indices) - 1);
   }
   
-  public int nextPhrase(Query query, int docid){
          
-
-  }
-  
   
   
   
