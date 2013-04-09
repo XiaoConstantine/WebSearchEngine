@@ -1,6 +1,9 @@
 package edu.nyu.cs.cs2580;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.Vector;
@@ -29,6 +32,7 @@ public class RankerComprehensive extends Ranker {
       double lambda = 0.5;
       Vector<String> qv = query._tokens;
       while ((doc = (DocumentIndexed)_indexer.nextDoc(query, docid)) != null) {
+    	  //System.out.println("docid: " + doc._docid);
           //page rank
           double score = 0.0;
           for(int i = 0; i < qv.size(); i++){
@@ -37,7 +41,8 @@ public class RankerComprehensive extends Ranker {
               if(terms.length > 1){
                   term = terms[0];
               }
-              String id = (new Integer(docid)).toString();
+                           
+              String id = (new Integer(doc._docid)).toString();
               double termlike = (double)_indexer.corpusTermFrequency(term) / (double)_indexer.totalTermFrequency();
               double doclike = (double)_indexer.documentTermFrequency(term,id) / (double)doc.getDocTotalTermFrequency();
               score += Math.log((1 - lambda)*doclike + lambda*termlike);
@@ -52,13 +57,62 @@ public class RankerComprehensive extends Ranker {
           
           docid = doc._docid;
       }
-      Vector<ScoredDocument> results = new Vector<ScoredDocument>();
+      
+      System.out.println("rankQueue size: " + rankQueue.size());
+      Vector<ScoredDocument> tmpResults = new Vector<ScoredDocument>();
       ScoredDocument sd = null;
+      //System.out.println("rankQueue size: " + rankQueue.size());
       while((sd = rankQueue.poll()) != null){
-          results.add(sd);
+          tmpResults.add(sd);
       }
-      Collections.sort(results, Collections.reverseOrder());
-      if (results.size() > numResults) results = (Vector<ScoredDocument>) results.subList(0, numResults - 1);
+      Collections.sort(tmpResults, Collections.reverseOrder());
+      
+      Vector<ScoredDocument> results = new Vector<ScoredDocument>();
+      if (tmpResults.size() > numResults) {
+    	  for (int i = 0; i < numResults; ++i) {
+    		  results.add(tmpResults.get(i));
+    	  }
+    	 // results = (Vector<ScoredDocument>) results.subList(0, numResults - 1);
+      } else {
+    	  results.addAll(tmpResults);
+      }
+      
+      System.out.println("numResults: " + numResults + ", results: " + results.size());
+      for (ScoredDocument scoreDoc : results) {
+    	  	DocumentIndexed document = (DocumentIndexed) scoreDoc.get_doc();
+    	  	System.out.println("doc: " + document._docid);
+			HashMap<String, Integer> docTermFrequency = document.getDocTermFrequency();
+			System.out.println(docTermFrequency.size());
+			if (docTermFrequency.size() == 0) {
+				try {
+					BufferedReader br = new BufferedReader(new FileReader(
+							_options._indexPrefix + "/documents.idx"));
+					String content;
+					while ((content = br.readLine()) != null) {
+						String[] recordArray = content.split(";");
+						if (Integer.parseInt(recordArray[0]) == document._docid) {
+							// read the docTermFrequency
+							String docTermMap = recordArray[6];
+
+							String[] terms = docTermMap.split(",");
+							for (int i = 0; i < terms.length; ++i) {
+								String tmp = terms[i];
+								String[] result = tmp.split(" ");
+								docTermFrequency.put(result[0],
+										Integer.parseInt(result[1]));
+							}
+							document.setDocTermFrequency(docTermFrequency);
+							break;
+						}
+					}
+					br.close();
+
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+      }
+     // System.out.println(results.size());
       return results;
   }
 }

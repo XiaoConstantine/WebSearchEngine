@@ -141,7 +141,7 @@ public class LogMinerNumviews extends LogMiner {
 		}
 		
 		br.close();
-		
+		System.out.println(numViewValues.size() + " files, load numView finished!");
 		// return a hash map, key is the file name, value is the numView
 		return numViewValues;
 	}

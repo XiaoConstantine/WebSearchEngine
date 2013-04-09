@@ -1,5 +1,6 @@
 package edu.nyu.cs.cs2580;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -46,6 +47,12 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
     //Store all Document in memory.
     private Vector<DocumentIndexed> _documents = new Vector<DocumentIndexed>();
     
+    // Store the pagerank values
+    private HashMap<String, Double> pagerankValues = new HashMap<String, Double>();
+    
+    // Store the numView values
+    private HashMap<String, Integer> numViewValues = new HashMap<String, Integer>();
+    
     private long docTotalTermFrequency = 0;
     private int pos = 0;
     
@@ -85,22 +92,37 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
             File[] files = folder.listFiles();
             int docid = 0;
 			int round = 0;
+			
+			// load pagerank values
+			CorpusAnalyzer analyzer = CorpusAnalyzer.Factory.getCorpusAnalyzerByOption(
+			        SearchEngine.OPTIONS);
+			pagerankValues = (HashMap<String, Double>) analyzer.load();
+			//System.out.println(pagerankValues.get("Andrei_?erban"));
+			
+			// load numView values
+			LogMiner miner = LogMiner.Factory.getLogMinerByOption(SearchEngine.OPTIONS);
+            numViewValues = (HashMap<String, Integer>) miner.load();
             
+			//System.out.println(numViewValues.get("Andrei_?erban"));
+
+			
+			
 			if(files.length % 200 == 0) round = files.length/200;
 			else round = files.length/200 + 1;
-            System.out.println("rounds:" + round);
+            //System.out.println("rounds:" + round);
 			for(int i = 0; i < round; i++){
 				for(int j = 0; j < 200 && (i*200 + j < files.length); j++){
+					System.out.println(docid + ", " + files[docid].getName());
 					processWikiDocument(files[docid], docid);
 				    docid++;
                     ++_numDocs;
 				}
 				if(i == 0){
 					writeIndex();
-                    writeDocuments(round);
+                    writeDocuments(i);
 				}else{
 					mergeAndWriteIndex(i, round);
-                    writeDocuments(round);
+                    writeDocuments(i);
 				}
                 System.out.println("round" + i + "\n");
 			}
@@ -175,7 +197,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
     }*/
     public void writeDocuments(int round) throws IOException{
         //docid,title,url,pageRank,numViews
-		String fileName = _options._indexPrefix + "/document.idx";
+		String fileName = _options._indexPrefix + "/documents.idx";
 		File file = new File(fileName);
 	    BufferedWriter bw;
         if(round == 0){
@@ -192,13 +214,14 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
                      + _documents.get(id).getNumViews() + ";" 
                      + _documents.get(id).getDocTotalTermFrequency() + ";");
 			for(String content: _documents.get(id).getDocTermFrequency().keySet()){
-				bw.write(content + ";" 
-                         + _documents.get(id).getDocTermFrequency().get(content)/ _documents.get(id).getDocTotalTermFrequency()
-                         +";");
+				bw.write(content + " " 
+                         + _documents.get(id).getDocTermFrequency().get(content) +",");
 			}
+			bw.write("\n");
 			_documents.get(id).setDocTermFrequency(null);
             id++;
 		}
+        bw.close();
     }
 
     
@@ -469,8 +492,20 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
         pos = 0;
         DocumentIndexed doc = new DocumentIndexed(docid,this);
         HashMap<String, Integer> doc_term = new HashMap<String, Integer>();
-        doc.setUrl(file.getAbsolutePath());
-        doc.setTitle(file.getName());
+        String fileName = file.getName();
+        
+        doc.setUrl(fileName);
+        doc.setTitle(fileName);
+        //System.out.print("before pg and nv");
+        double pg = 0.0;
+        if (pagerankValues.get(fileName) != null) pg = pagerankValues.get(fileName);
+       // System.out.println(", " + pg);
+        int nv = 0;
+        if (numViewValues.get(fileName) != null) nv= numViewValues.get(fileName);
+      //  System.out.println(", " + nv);
+        doc.setPageRank((float)pg);
+        doc.setNumViews(nv);
+        
         
         //phrase title
         String title = file.getName();
@@ -526,6 +561,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
 				processWikiDoc(line,docid, doc_term);
 			}
             doc.setDocTermFrequency(doc_term);
+            doc.setDocTotalTermFrequency(docTotalTermFrequency);
             _documents.add(docid,doc);
 		} finally {
 			reader.close();
@@ -676,7 +712,10 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
             }
         }
         System.out.println("totalTermFrequency: " + _totalTermFrequency);
+        br.close();
     }
+    
+    
 	private void loadDocuments() throws IOException {
 	    String docFile = _options._indexPrefix + "/documents.idx";
 	    System.out.println("Load documents from: " + docFile);
@@ -684,19 +723,23 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
 	    BufferedReader br = new BufferedReader(new FileReader(docFile));
 	    String content;
 	    while ((content = br.readLine()) != null) {
-	    	String[] records = content.split("#");
-            for(String record : records){
-                String[] recordArray = record.split(":");
-                DocumentIndexed doc = new DocumentIndexed(Integer.parseInt(recordArray[0]), this);
-                doc.setTitle(recordArray[1]);
-                doc.setUrl(recordArray[2]);
-                doc.setPageRank(Float.parseFloat(recordArray[3]));
-                doc.setNumViews(Integer.parseInt(recordArray[4]));
-                doc.setDocTotalTermFrequency(Long.parseLong(recordArray[5]));
-                _documents.add(doc);
-            }
-        }
+			String[] recordArray = content.split(";");
+			//System.out.println(recordArray[0] + ", " + recordArray[1]);
+			DocumentIndexed doc = new DocumentIndexed(
+					Integer.parseInt(recordArray[0]), this);
+			doc.setTitle(recordArray[1]);
+			doc.setUrl(recordArray[2]);
+			doc.setPageRank(Float.parseFloat(recordArray[3]));
+			doc.setNumViews(Integer.parseInt(recordArray[4]));
+			doc.setDocTotalTermFrequency(Long.parseLong(recordArray[5]));
+
+			// set the docTermFrequency empty
+			HashMap<String, Integer> docTerms = new HashMap<String, Integer>();
+			doc.setDocTermFrequency(docTerms);
+			_documents.add(doc);
+		}
 	    _numDocs = _documents.size();
+	    br.close();
 	}
     
     
@@ -715,6 +758,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
         ArrayList<Integer> indices = new ArrayList<Integer>();
         for(String term : query_list){
             term = stem(term);
+            System.out.println(term);
             String[] terms = term.split(" ");
             int count = 1,id = 0;
             if(terms.length > 1){
@@ -1074,8 +1118,77 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
     
     @Override
     public int documentTermFrequency(String term, String url) {
-        //SearchEngine.Check(false, "Not implemented!");
-        return 0;
+        int docid = Integer.parseInt(url);
+        DocumentIndexed doc = _documents.get(docid);
+        HashMap<String, Integer> docTermFrequency = doc.getDocTermFrequency();
+//        
+//        if (docTermFrequency.size() == 0) {
+//        	try {
+//				BufferedReader br = new BufferedReader(new FileReader(
+//						_options._indexPrefix + "/documents.idx"));
+//				String content;
+//				while ((content = br.readLine()) != null) {
+//					String[] recordArray = content.split(";");
+//					if (Integer.parseInt(recordArray[0]) == doc._docid) {
+//						// read the docTermFrequency
+//						String docTermMap = recordArray[6];
+//	
+//						String[] terms = docTermMap.split(",");
+//						for (int i = 0; i < terms.length; ++i) {
+//							String tmp = terms[i];
+//							String[] result = tmp.split(" ");
+//							docTermFrequency.put(result[0], Integer.parseInt(result[1]));
+//						}
+//						doc.setDocTermFrequency(docTermFrequency);
+//						break;
+//					}
+//				}
+//				br.close();
+//				
+//        	} catch (Exception e) {
+//        		e.printStackTrace();
+//        	}
+//        }
+        int result = 0;
+        if (docTermFrequency.size() == 0) {
+        	
+            HashMap<String, ArrayList<ArrayList<Integer>>> dict;
+            int idx = (term.charAt(0) - 'a')/5;
+             
+            switch(idx){
+                case 0:
+                    dict = invertedIndex_wiki.get(0);
+                    break;
+                case 1:
+                    dict = invertedIndex_wiki.get(1);
+                    break;
+                case 2:
+                    dict = invertedIndex_wiki.get(2);
+                    break;
+                case 3:
+                    dict = invertedIndex_wiki.get(3);
+                    break;
+                case 4:
+                case 5:
+                    dict = invertedIndex_wiki.get(4);
+                    break;
+                default: 
+                    dict = invertedIndex_wiki.get(5);
+                    break;
+            }
+            
+            ArrayList<ArrayList<Integer>> terms = dict.get(term);
+            for (ArrayList<Integer> docs : terms) {
+            	if (docs.get(0) == docid) {
+            		result = docs.size() - 1;
+            		break;
+            	}
+            }
+        } else {
+        	result = docTermFrequency.get(term);
+        }
+        
+        return result;
     }
     
     public static void main(String args[]) throws IOException,ClassNotFoundException{
