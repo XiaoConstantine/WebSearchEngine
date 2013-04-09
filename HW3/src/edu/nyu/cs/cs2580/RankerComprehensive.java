@@ -33,6 +33,10 @@ public class RankerComprehensive extends Ranker {
           double score = 0.0;
           for(int i = 0; i < qv.size(); i++){
               String term = qv.get(i);
+              String terms = term.split(" ");
+              if(terms.length > 1){
+                  term = terms[0];
+              }
               String id = (new Integer(docid)).toString();
               double termlike = (double)_indexer.corpusTermFrequency(term) / (double)_indexer.totalTermFrequency();
               double doclike = (double)_indexer.documentTermFrequency(term,id) / (double)doc.getDocTotalTermFrequency();
