@@ -242,7 +242,7 @@ class Stemmer implements Serializable {
 		if (ends("eed")) {
 			if (m() > 0)
 				k--;
-		} else if ((ends("ed") || ends("ing")) && vowelinstem()) {
+		} else if ((ends("ed")) && vowelinstem()) {
 			k = j;
 			if (ends("at"))
 				setto("ate");

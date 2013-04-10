@@ -130,6 +130,10 @@ class QueryHandler implements HttpHandler {
       response.append(doc.asTextResult());
     }
     response.append(response.length() > 0 ? "\n" : "");
+      if(docs.size() == 0){
+          response.append("\nNo such query!\n");
+          response.append("\n");
+      }
   }
 
   public void handle(HttpExchange exchange) throws IOException {

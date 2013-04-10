@@ -171,10 +171,9 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
      */
     public void writeTermFrequency(BufferedWriter bw) throws IOException{
         StringBuilder sb;
-		// termFrequency format: term; frequency
+		// termFrequency format: term:frequency#
 		for (String term : termFrequency.keySet()) {
 			bw.write(term + ":" + termFrequency.get(term) + "#");
-			//bw.write(sb.toString());
 		}
     }
     
@@ -209,7 +208,8 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
 		//for(int i = round*200; i<_documents.size(); i++){
         for(int i = 0; i < 200 && id <_documents.size(); i++){
             bw.write(_documents.get(id)._docid + ";");
-            bw.write(_documents.get(id).getTitle() + ";" + _documents.get(id).getUrl() + ";" 
+            bw.write(_documents.get(id).getTitle() + ";" 
+                     + _documents.get(id).getUrl() + ";" 
                      + _documents.get(id).getPageRank()+ ";" 
                      + _documents.get(id).getNumViews() + ";" 
                      + _documents.get(id).getDocTotalTermFrequency() + ";");
@@ -262,7 +262,6 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
                                  HashMap<String, ArrayList<ArrayList<Integer> > > dict) throws IOException {
 		StringBuilder sb;
 		for (String term : orderedTerms) { // write the terms alphabetically
-			//sb = new StringBuilder();
 			// separate term and its doc ids by semicolon
 			bw.write(term + ";");
 			// separate the doc ids by white space
@@ -357,30 +356,20 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
                     bw.write(";");
                 }
 		        bw.write("\n");
-				//sb.append("\n");
-				//bw.write(sb.toString());
 				prevRecord = br.readLine();
 				termIndex++;
 			} else if (prevTerm.compareTo(newTerm) < 0) { // prevTerm is alphabetically smaller than newTerm, write prevRecord
-				//sb.append(prevRecord + "\n");
-				//bw.write(sb.toString());
-                
 				bw.write(prevRecord + "\n");
 				prevRecord = br.readLine();
 			} else if (prevTerm.compareTo(newTerm) > 0) { // prevTerm is alphabetically larger than newTerm, write newTerm
-				//sb.append(newTerm + ";");
 				bw.write(newTerm + ";");
 				for (ArrayList<Integer> infoindex: dict.get(newTerm)) {
                     for(int b: infoindex){
-						//sb.append(" " + b);
                         bw.write(b + " ");
-                        // bw.write(b);
                     }
                     bw.write(";");
 				}
 				bw.write("\n");
-				//sb.append("\n");
-				//bw.write(sb.toString());
 				termIndex++;
 			}
 			
@@ -388,28 +377,19 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
         
 		// write the remaining records in previous index to new files
 		while (prevRecord != null) {
-			//sb = new StringBuilder();
-			//sb.append(prevRecord + "\n");
-			//bw.write(sb.toString());
 		    bw.write(prevRecord + "\n");
 			prevRecord = br.readLine();
 		}
 		// write the remaining current data to new files
 		while (termIndex < orderedTerms.size()) {
 			String term = orderedTerms.get(termIndex);
-			//sb = new StringBuilder();
-			//sb.append(term + ";");
 			bw.write(term + ";");
 			for (ArrayList<Integer> infoindex: dict.get(term)) {
                 for(int b: infoindex){
-                    //sb.append(" " + b);
                     bw.write(b + " ");
-                    // bw.write(b);
                 }
                 bw.write(";");
 			}
-			//sb.append("\n");
-			//bw.write(sb.toString());
 			bw.write("\n");
 			termIndex++;
 		}
@@ -757,25 +737,35 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
         Vector<String> query_list = query._tokens;
         ArrayList<Integer> indices = new ArrayList<Integer>();
         for(String term : query_list){
+            //System.out.println(term);
             term = stem(term);
+            
             //System.out.println(term);
             String[] terms = term.split(" ");
+            System.out.println(terms[0] + " " + terms[1] );
             int count = 1,id = 0;
-            if(terms.length > 1){
-                //int length = terms.length;
+            if(terms.length > 1){                
+                //to control loop times
                 int[] maxLoopTimes = new int[terms.length];
                 for(int j = 0; j < terms.length; j++){
                     maxLoopTimes[j] = termFrequency.get(terms[j]);
                 }
                 Arrays.sort(maxLoopTimes);
                 int maxTimes = maxLoopTimes[0];
+                
+                //begin logic
                 int minDocID = docid;
+                //System.out.println("minDocID: " + minDocID);
                 ArrayList<Integer> minDocIDList = new ArrayList<Integer>();
                 boolean isModified = false;
+                boolean invalidNextID = false;
                 while(true){
                     for(int i = 0; i < terms.length; i++){
                         int nextID = next(terms[i],minDocID);
-                        System.out.println("nextID: " + nextID );
+                        if(nextID == -1){
+                            invalidNextID = true;
+                            //break;
+                        }
                         if(minDocIDList.contains(nextID) != true){
                             minDocIDList.add(nextID);
                             isModified = true;
@@ -784,16 +774,16 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
                     System.out.println("minDocIDList: " + minDocIDList);
                     for(int i = 0; i < minDocIDList.size(); i++){
                         minDocID = minDocIDList.get(0);
-                        if(minDocID > minDocIDList.get(i)){
+                        if(minDocID < minDocIDList.get(i)){
                             minDocID = minDocIDList.get(i);
                         }
                     }
-                    System.out.println("minDocID: " + minDocID);
+                    if(minDocIDList.size() != 1){
+                        minDocID = minDocID - 1;
+                    }
                     if(allEquals(minDocIDList) == true){
-                        System.out.println("allEquals true");
                         minDocIDList.clear();
                         id = nextPhrase(term,minDocID,1);
-                        System.out.println("id == -1? " + id);
                         if(id != -1) {
                             break;
                         }
@@ -801,33 +791,41 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
                             break;
                         }
                     }
+                    
                     if(isModified == false){
-                        System.out.println("isModified == false");
                         minDocIDList.clear();
                         id = -1;
                         break;
                     }
+                    if(invalidNextID== true){
+                        return null;
+                    }
+                    
                     minDocIDList.clear();
                     count++;
+                   
                 }
-                //id = nextPhrase(term,minDocID,1);
             }else if(terms.length == 1){
                 id = next(term,docid);
             }
             if(id == -1)return null;
-            else indices.add(id);
+            else {
+                indices.add(id);
+            }
         }
         if(allEquals(indices) == true){
-            return _documents.get(indices.get(0));
+            DocumentIndexed d = _documents.get(indices.get(0));
+            //System.out.println("result "+ d._docid);
+            return d;
         }else return nextDoc(query, maxID(indices) -1);
     }
     
     private int next(String term, int docid){
+        //System.out.println("*********in next()********");
         if(!termFrequency.containsKey(term)) return -1;
         String initial, fileName;
         HashMap<String, ArrayList<ArrayList<Integer>>> dict;
         int idx = (term.charAt(0) - 'a')/5;
-        
         switch(idx){
             case 0:
                 initial = "a";
@@ -866,48 +864,52 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
                     String []results = record.split(";");
                     //results[0] is term
                     //results[1] is posList of this term, split with white space " "
-                    ArrayList<ArrayList<Integer>> list = new ArrayList<ArrayList<Integer>>();
-                    for(int i = 1; i< results.length; i++){
-                        String []indexInfo = results[i].split(" ");
-                        ArrayList<Integer> pos = new ArrayList<Integer>();
-                        pos.add(Integer.parseInt(indexInfo[0]));
-                        for(int j = 1; j < indexInfo.length; ++j){
-                            pos.add(Integer.parseInt(indexInfo[j]));
+                    if(results[0].equals(term)){
+                        ArrayList<ArrayList<Integer>> list = new ArrayList<ArrayList<Integer>>();
+                        for(int i = 1; i< results.length; i++){
+                            String []indexInfo = results[i].split(" ");
+                            ArrayList<Integer> pos = new ArrayList<Integer>();
+                            pos.add(Integer.parseInt(indexInfo[0]));
+                            for(int j = 1; j < indexInfo.length; ++j){
+                                pos.add(Integer.parseInt(indexInfo[j]));
+                            }
+                            list.add(pos);
                         }
-                         list.add(pos);
+                        dict.put(results[0],list);
                     }
-                    dict.put(results[0],list);
                 }
                 br.close();
             }
-            //System.out.println("term:"+term);
             ArrayList<ArrayList<Integer>> idList = dict.get(term);
             ArrayList<Integer> ids = new ArrayList<Integer>();
             for(ArrayList<Integer> i : idList){
                 ids.add(i.get(0));
             }
             int length = ids.size();
+            //System.out.println("docid in next() " + docid );
             if(docid >= ids.get(length-1)) return -1;
             if(docid < ids.get(0)) return ids.get(0);
-            return ids.get(binarySearch(term,1,length-1,docid,ids));
+            return ids.get(binarySearch(term,0,length-1,docid,ids));
         }catch(Exception e){
             e.printStackTrace();
             return -1;
         }
+            
     }
     
     //return docid if queryPhrase is a phrase in this docid 
     //return -1 if queryPhrase is not a phrase in this docid
     public int nextPhrase(String queryPhrase, int docid,int pos){
+        //System.out.println(queryPhrase);
         String[] terms = queryPhrase.split(" ");
         //find the docid that contains all terms.
-        
         Vector<Integer> posList = new Vector<Integer>();
         int position;
         for(int i = 0; i < terms.length; i++){
-            System.out.println(terms[i]);
+            //System.out.println(terms[i]);
             terms[i] = stem(terms[i]);
             position = next_pos(terms[i], docid,pos);
+            //System.out.println("next_pos() return :" + position);
             if(position == -1){
                 return -1;
             }
@@ -925,10 +927,12 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
         }else{
             int minPos = posList.get(0);
             for(int p : posList){
-                if(minPos > p){
+                if(minPos < p){
                     minPos = p;
                 }
             }
+            minPos = minPos - terms.length;
+            //System.out.println("minPos " + minPos);
             return nextPhrase(queryPhrase,docid, minPos);
         }
     }
@@ -977,17 +981,19 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
                     String []results = record.split(";");
                     //results[0] is term
                     //results[1] is posList of this term, split with white space " "
-                    ArrayList<ArrayList<Integer>> list = new ArrayList<ArrayList<Integer>>();
-                    for(int i = 1; i< results.length; i++){
-                        String []indexInfo = results[i].split(" ");
-                        ArrayList<Integer> pos = new ArrayList<Integer>();
-                        pos.add(Integer.parseInt(indexInfo[0]));
-                        for(int j = 1; j < indexInfo.length; ++j){
-                            pos.add(Integer.parseInt(indexInfo[j]));
+                    if(results[0].equals(term)){
+                        ArrayList<ArrayList<Integer>> list = new ArrayList<ArrayList<Integer>>();
+                        for(int i = 1; i< results.length; i++){
+                            String []indexInfo = results[i].split(" ");
+                            ArrayList<Integer> pos = new ArrayList<Integer>();
+                            pos.add(Integer.parseInt(indexInfo[0]));
+                            for(int j = 1; j < indexInfo.length; ++j){
+                                pos.add(Integer.parseInt(indexInfo[j]));
+                            }
+                            list.add(pos);
                         }
-                        list.add(pos);
+                        dict.put(results[0],list);
                     }
-                    dict.put(results[0],list);
                 }
                 br.close();
             }
@@ -996,14 +1002,14 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
             for(ArrayList<Integer> i : idList){
                 if(i.get(0) == docid){
                     posList = i;
-                    System.out.println(posList);
+                    //System.out.println(posList);
                 }
             }
             for(int i = 1; i < posList.size()-1; i++){
                 if(posList.get(i) > position){
-                    System.out.println("yes");
-                    System.out.println(posList.get(i));
-                    dict.clear();
+                    //System.out.println("yes");
+                    //System.out.println(posList.get(i));
+                    //dict.clear();
                     return posList.get(i);
                 }
             }
@@ -1121,40 +1127,13 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
         int docid = Integer.parseInt(url);
         DocumentIndexed doc = _documents.get(docid);
         HashMap<String, Integer> docTermFrequency = doc.getDocTermFrequency();
-//        
-//        if (docTermFrequency.size() == 0) {
-//        	try {
-//				BufferedReader br = new BufferedReader(new FileReader(
-//						_options._indexPrefix + "/documents.idx"));
-//				String content;
-//				while ((content = br.readLine()) != null) {
-//					String[] recordArray = content.split(";");
-//					if (Integer.parseInt(recordArray[0]) == doc._docid) {
-//						// read the docTermFrequency
-//						String docTermMap = recordArray[6];
-//	
-//						String[] terms = docTermMap.split(",");
-//						for (int i = 0; i < terms.length; ++i) {
-//							String tmp = terms[i];
-//							String[] result = tmp.split(" ");
-//							docTermFrequency.put(result[0], Integer.parseInt(result[1]));
-//						}
-//						doc.setDocTermFrequency(docTermFrequency);
-//						break;
-//					}
-//				}
-//				br.close();
-//				
-//        	} catch (Exception e) {
-//        		e.printStackTrace();
-//        	}
-//        }
+        
         int result = 0;
         if (docTermFrequency.size() == 0) {
         	
             HashMap<String, ArrayList<ArrayList<Integer>>> dict;
             int idx = (term.charAt(0) - 'a')/5;
-             
+            
             switch(idx){
                 case 0:
                     dict = invertedIndex_wiki.get(0);
