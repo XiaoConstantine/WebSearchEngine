@@ -155,12 +155,6 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable {
         bw.close();
         weakRefgc();
         
-        //merge XiaoCui's code
-        /* String docFile = _options._indexPrefix + "/documents.idx";
-         System.out.println("Documents: writing to " + docFile);
-         bw = new BufferedWriter(new FileWriter(docFile));
-         writeDocuments(bw);
-         bw.close();*/
     }
     
     
@@ -742,7 +736,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable {
             
             //System.out.println(term);
             String[] terms = term.split(" ");
-            System.out.println(terms[0] + " " + terms[1] );
+            //System.out.println(terms[0] + " " + terms[1] );
             int count = 1,id = 0;
             if(terms.length > 1){                
                 //to control loop times
@@ -771,7 +765,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable {
                             isModified = true;
                         }
                     }
-                    System.out.println("minDocIDList: " + minDocIDList);
+                    //System.out.println("minDocIDList: " + minDocIDList);
                     for(int i = 0; i < minDocIDList.size(); i++){
                         minDocID = minDocIDList.get(0);
                         if(minDocID < minDocIDList.get(i)){
@@ -974,7 +968,6 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable {
         try{
             fileName = _options._indexPrefix + "/" + initial + ".idx";
             if(dict.isEmpty()){
-                
                 BufferedReader br = new BufferedReader(new FileReader(fileName));
                 String record;
                 while((record = br.readLine()) != null){
@@ -1007,9 +1000,6 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable {
             }
             for(int i = 1; i < posList.size()-1; i++){
                 if(posList.get(i) > position){
-                    //System.out.println("yes");
-                    //System.out.println(posList.get(i));
-                    //dict.clear();
                     return posList.get(i);
                 }
             }
