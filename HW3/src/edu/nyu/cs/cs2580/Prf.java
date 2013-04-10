@@ -57,7 +57,7 @@ public class Prf {
 				stopwords++;
 			}
 		}
-		System.out.println("remove " + stopwords + " stopwords");
+		//System.out.println("remove " + stopwords + " stopwords");
 		
 		// get the most numTerms frequent terms
 		ArrayList<Integer> freqValues = new ArrayList<Integer>(termFrequency.values());
@@ -82,22 +82,22 @@ public class Prf {
 		}
 		
 		// output the result
-		String folderName = option._indexPrefix + "/prf";
-		File outputFolder = new File(folderName);
-		if (outputFolder.exists() == false) outputFolder.mkdir();
-		String fileName = folderName + "/" + query + ".tsv";	
-		File outputFile = new File(fileName);
-		BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile));
+//		String folderName = option._indexPrefix + "/prf";
+//		File outputFolder = new File(folderName);
+//		if (outputFolder.exists() == false) outputFolder.mkdir();
+//		String fileName = folderName + "/" + query + ".tsv";	
+//		File outputFile = new File(fileName);
+//		BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile));
 		StringBuilder sb = new StringBuilder();
 		
 		for (String term : resultTerms) {
 			double prob = (double) termFrequency.get(term) / totalTermFrequency;
 			sb.append(term + "\t" + prob + "\n");
-			bw.write(term + "\t" + prob + "\n");
+			System.out.println(term + "\t" + prob + "\n");
 		}
-		bw.close();
+//		bw.close();
 		
-		System.out.println("Finished writing to " + fileName);
+		//System.out.println("Finished expansion " + query);
 		return sb.toString();
 	}
 }

@@ -193,13 +193,13 @@ class QueryHandler implements HttpHandler {
 	      // nothing
 	    }
 	    respondWithMsg(exchange, response.toString());
+	    System.out.println("Finished query: " + cgiArgs._query);
     } else if (uriPath.equals("/prf")) {
     	Prf prf = new Prf(scoredDocs, cgiArgs, SearchEngine.OPTIONS);
     	String result = prf.queryExpansion();
     	
     	respondWithMsg(exchange, result + "Finish query expansion for " + cgiArgs._query + "\n");
-    }
-    System.out.println("Finished query: " + cgiArgs._query);
+    }  
   }
 }
 

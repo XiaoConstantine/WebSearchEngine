@@ -13,14 +13,17 @@ public class Bhattacharyya {
 	// format is <query1 <query2, coefficient>>
 	private static HashMap<String, HashMap<String, Double>> bhResults = new HashMap<String, HashMap<String, Double>>();
 	
-	public static void readPrf(String prfFolderName) {
+	public static void readPrf(String prfFileName) {
 		try {
-			File folder = new File(prfFolderName);
-			File[] prfFiles = folder.listFiles();
-			BufferedReader br;
+			File prfFile = new File(prfFileName);
 			
-			for (int i = 0; i < prfFiles.length; ++i) {
-				String fileName = prfFiles[i].getName();
+			BufferedReader br;
+			BufferedReader prfBr = new BufferedReader(new FileReader(prfFile));
+			String prfInfo;
+			while ((prfInfo = prfBr.readLine()) != null){
+				String[] tmpResults = prfInfo.split(":");
+				String query = tmpResults[0];
+				String fileName = tmpResults[1];
 				br = new BufferedReader(new FileReader(fileName));
 				
 				String content;
@@ -32,6 +35,7 @@ public class Bhattacharyya {
 				prfResults.put(fileName, termProb);
 				br.close();
 			}
+			prfBr.close();
 			return;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -86,10 +90,10 @@ public class Bhattacharyya {
 			System.exit(-1);
 		}
 		
-		String prfFolderName = args[0];
+		String prfFileName = args[0];
 		String outputName = args[1];
 		
-		readPrf(prfFolderName);
+		readPrf(prfFileName);
 		calculateCoef();
 		writePrf(outputName);
 
