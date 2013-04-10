@@ -758,7 +758,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
         ArrayList<Integer> indices = new ArrayList<Integer>();
         for(String term : query_list){
             term = stem(term);
-            System.out.println(term);
+            //System.out.println(term);
             String[] terms = term.split(" ");
             int count = 1,id = 0;
             if(terms.length > 1){

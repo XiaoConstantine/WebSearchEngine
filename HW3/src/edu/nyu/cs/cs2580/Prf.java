@@ -25,14 +25,15 @@ public class Prf {
 		this.option = option;
 	}
 	
-	public void queryExpansion() throws IOException {
+	public String queryExpansion() throws IOException {
 		ArrayList<DocumentIndexed> docs = new ArrayList<DocumentIndexed>();
 		for (ScoredDocument sd : scoredDocs) {
 			docs.add((DocumentIndexed)sd.get_doc());
 		}
-		
+
 		// read and organize the top k documents term frequency
 		HashMap<String, Integer> docTermFrequency;
+		long docsTotalTermFrequency = 0;
 		for (DocumentIndexed doc : docs) {
 			docTermFrequency = doc.getDocTermFrequency();
 			for (String term : docTermFrequency.keySet()) {
@@ -41,7 +42,22 @@ public class Prf {
 				else newFreq = docTermFrequency.get(term);
 				termFrequency.put(term, newFreq);
 			}
+			//System.out.println(doc.getTitle() + ", " + doc.getDocTotalTermFrequency());
+			docsTotalTermFrequency += doc.getDocTotalTermFrequency();
 		}
+			
+		// remove stop word		
+		int stopwords = 0;
+		ArrayList<String> terms = new ArrayList<String>(termFrequency.keySet());
+		for (String term : terms) {
+			double freq = (double) termFrequency.get(term) / (double) docsTotalTermFrequency;
+			if (freq > 0.01) {
+				//System.out.println(term + ", " + freq);
+				termFrequency.remove(term);
+				stopwords++;
+			}
+		}
+		System.out.println("remove " + stopwords + " stopwords");
 		
 		// get the most numTerms frequent terms
 		ArrayList<Integer> freqValues = new ArrayList<Integer>(termFrequency.values());
@@ -53,26 +69,35 @@ public class Prf {
 				resultTerms.add(term);
 			}
 		}
-		resultTerms = (ArrayList<String>) resultTerms.subList(0, numTerms - 1);
+		//resultTerms = (ArrayList<String>) resultTerms.subList(0, numTerms - 1);
+		
+		ArrayList<String> results = new ArrayList<String>();
+		for (int i = 0; i < numTerms; ++i) {
+			results.add(resultTerms.get(i));
+		}
+		
 		long totalTermFrequency = 0;		
-		for (String term : resultTerms) {
+		for (String term : results) {
 			totalTermFrequency += termFrequency.get(term);
 		}
 		
 		// output the result
 		String folderName = option._indexPrefix + "/prf";
+		File outputFolder = new File(folderName);
+		if (outputFolder.exists() == false) outputFolder.mkdir();
 		String fileName = folderName + "/" + query + ".tsv";	
 		File outputFile = new File(fileName);
 		BufferedWriter bw = new BufferedWriter(new FileWriter(outputFile));
+		StringBuilder sb = new StringBuilder();
 		
 		for (String term : resultTerms) {
 			double prob = (double) termFrequency.get(term) / totalTermFrequency;
-			System.out.println(term + "\t" + prob + "\n");
+			sb.append(term + "\t" + prob + "\n");
 			bw.write(term + "\t" + prob + "\n");
 		}
 		bw.close();
 		
 		System.out.println("Finished writing to " + fileName);
-		return;
+		return sb.toString();
 	}
 }

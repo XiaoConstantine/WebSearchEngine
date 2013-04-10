@@ -82,7 +82,7 @@ public class RankerComprehensive extends Ranker {
     	  	DocumentIndexed document = (DocumentIndexed) scoreDoc.get_doc();
     	  	System.out.println("doc: " + document._docid);
 			HashMap<String, Integer> docTermFrequency = document.getDocTermFrequency();
-			System.out.println(docTermFrequency.size());
+			//System.out.println(docTermFrequency.size());
 			if (docTermFrequency.size() == 0) {
 				try {
 					BufferedReader br = new BufferedReader(new FileReader(
