@@ -728,75 +728,68 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable {
      */
     @Override
     public DocumentIndexed nextDoc(Query query, int docid) {
+        
         Vector<String> query_list = query._tokens;
         ArrayList<Integer> indices = new ArrayList<Integer>();
         for(String term : query_list){
-            //System.out.println(term);
             term = stem(term);
-            
-            //System.out.println(term);
             String[] terms = term.split(" ");
-            //System.out.println(terms[0] + " " + terms[1] );
             int count = 1,id = 0;
-            if(terms.length > 1){                
+            String listName;
+            if(terms.length > 1){
+                
                 //to control loop times
-                int[] maxLoopTimes = new int[terms.length];
-                for(int j = 0; j < terms.length; j++){
-                    maxLoopTimes[j] = termFrequency.get(terms[j]);
+                ArrayList<Integer> maxLoopTimes = new ArrayList<Integer>();
+                for(String s: terms){
+                    maxLoopTimes.add(termFrequency.get(s));
                 }
-                Arrays.sort(maxLoopTimes);
-                int maxTimes = maxLoopTimes[0];
+                int maxTimes = maxItem(maxLoopTimes);
                 
                 //begin logic
-                int minDocID = docid;
-                //System.out.println("minDocID: " + minDocID);
-                ArrayList<Integer> minDocIDList = new ArrayList<Integer>();
+                int maxDocID = docid;
+                //System.out.println("maxDocID: " + maxDocID);
+                ArrayList<Integer> maxDocIDList = new ArrayList<Integer>();
                 boolean isModified = false;
                 boolean invalidNextID = false;
+                
                 while(true){
                     for(int i = 0; i < terms.length; i++){
-                        int nextID = next(terms[i],minDocID);
+                        
+                        int nextID = next(terms[i],maxDocID);
+                        //System.out.println("nextID " + nextID);
                         if(nextID == -1){
                             invalidNextID = true;
                             //break;
                         }
-                        if(minDocIDList.contains(nextID) != true){
-                            minDocIDList.add(nextID);
+                        if(maxDocIDList.contains(nextID) != true){
+                            maxDocIDList.add(nextID);
                             isModified = true;
                         }
                     }
-                    //System.out.println("minDocIDList: " + minDocIDList);
-                    for(int i = 0; i < minDocIDList.size(); i++){
-                        minDocID = minDocIDList.get(0);
-                        if(minDocID < minDocIDList.get(i)){
-                            minDocID = minDocIDList.get(i);
-                        }
-                    }
-                    if(minDocIDList.size() != 1){
-                        minDocID = minDocID - 1;
-                    }
-                    if(allEquals(minDocIDList) == true){
-                        minDocIDList.clear();
-                        id = nextPhrase(term,minDocID,1);
+                    //System.out.println("maxDocIDList: " + maxDocIDList);
+                    maxDocID = maxItem(maxDocIDList);
+                    if(maxDocIDList.size() == 1){
+                        maxDocIDList.clear();
+                        id = nextPhrase(term,maxDocID,1);
+                        //System.out.println("id = " + id);
                         if(id != -1) {
                             break;
                         }
                         if(count == maxTimes) {
-                            break;
+                            return null;
                         }
+                    }else{
+                        maxDocID = maxDocID - 1;
                     }
                     
-                    if(isModified == false){
-                        minDocIDList.clear();
-                        id = -1;
-                        break;
-                    }
-                    if(invalidNextID== true){
+                    if(isModified == false || invalidNextID== true){
+                        maxDocIDList.clear();
                         return null;
                     }
                     
-                    minDocIDList.clear();
+                    maxDocIDList.clear();
                     count++;
+                    //System.out.println("maxDocID " + maxDocID);
                     
                 }
             }else if(terms.length == 1){
@@ -808,14 +801,16 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable {
             }
         }
         if(allEquals(indices) == true){
-            DocumentIndexed d = _documents.get(indices.get(0));
-            //System.out.println("result "+ d._docid);
-            return d;
-        }else return nextDoc(query, maxID(indices) -1);
+            //System.out.println("true");
+            return _documents.get(indices.get(0));
+        }else{
+            //System.out.println("false");
+            return nextDoc(query, maxItem(indices) -1);
+        }
     }
     
     private int next(String term, int docid){
-        //System.out.println("*********in next()********");
+       // System.out.println("*********in next()********");
         if(!termFrequency.containsKey(term)) return -1;
         String initial, fileName;
         HashMap<String, ArrayList<ArrayList<Integer>>> dict;
@@ -849,8 +844,9 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable {
         }
         try{
             fileName = _options._indexPrefix + "/" + initial + ".idx";
-            //fileName = _options._indexPrefix + "/corpus.idx";
-            //dict = invertedIndex;
+            if(dict.containsKey(term) == false){
+                dict.clear();
+            }
             if(dict.isEmpty()){
                 BufferedReader br = new BufferedReader(new FileReader(fileName));
                 String record;
@@ -897,11 +893,11 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable {
         //System.out.println(queryPhrase);
         String[] terms = queryPhrase.split(" ");
         //find the docid that contains all terms.
-        Vector<Integer> posList = new Vector<Integer>();
+        ArrayList<Integer> posList = new ArrayList<Integer>();
         int position;
         for(int i = 0; i < terms.length; i++){
             //System.out.println(terms[i]);
-            terms[i] = stem(terms[i]);
+            //terms[i] = stem(terms[i]);
             position = next_pos(terms[i], docid,pos);
             //System.out.println("next_pos() return :" + position);
             if(position == -1){
@@ -919,15 +915,8 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable {
         if(isPhrase){
             return docid;
         }else{
-            int minPos = posList.get(0);
-            for(int p : posList){
-                if(minPos < p){
-                    minPos = p;
-                }
-            }
-            minPos = minPos - terms.length;
-            //System.out.println("minPos " + minPos);
-            return nextPhrase(queryPhrase,docid, minPos);
+            int maxPos = maxItem(posList)-1;
+            return nextPhrase(queryPhrase,docid, maxPos);
         }
     }
     
@@ -967,6 +956,10 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable {
         }
         try{
             fileName = _options._indexPrefix + "/" + initial + ".idx";
+            
+            if(dict.get(term).size() == 0){
+                dict.clear();
+            }
             if(dict.isEmpty()){
                 BufferedReader br = new BufferedReader(new FileReader(fileName));
                 String record;
@@ -1020,7 +1013,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable {
 		return high;
     }
     
-    private int maxID(ArrayList<Integer> ids){
+    private int maxItem(ArrayList<Integer> ids){
         int max = 0;
         for(int i = 0; i < ids.size(); i++){
             if(ids.get(i) > max) max = ids.get(i);
