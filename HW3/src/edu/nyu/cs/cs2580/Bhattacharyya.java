@@ -30,9 +30,9 @@ public class Bhattacharyya {
 				HashMap<String, Double> termProb = new HashMap<String, Double>();
 				while ((content = br.readLine()) != null) {
 					String[] results = content.split("\t");
-					termProb.put(results[0], Double.parseDouble(results[1]));
+					if (results.length == 2) termProb.put(results[0], Double.parseDouble(results[1]));
 				}
-				prfResults.put(fileName, termProb);
+				prfResults.put(query, termProb);
 				br.close();
 			}
 			prfBr.close();

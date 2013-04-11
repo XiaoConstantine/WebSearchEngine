@@ -112,7 +112,7 @@ public class IndexerInvertedCompressed extends Indexer implements Serializable {
             //System.out.println("rounds:" + round);
 			for(int i = 0; i < round; i++){
 				for(int j = 0; j < 200 && (i*200 + j < files.length); j++){
-					System.out.println(docid + ", " + files[docid].getName());
+					//System.out.println(docid + ", " + files[docid].getName());
 					processWikiDocument(files[docid], docid);
 				    docid++;
                     ++_numDocs;

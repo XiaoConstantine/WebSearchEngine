@@ -50,7 +50,7 @@ public class RankerComprehensive extends Ranker {
           score = Math.pow(Math.E,score);
           
           // combine the score with pagerank value and numview
-          score = 0.5 * score + 0.25 * doc.getPageRank() + 0.25 * doc.getNumViews();
+          score = 0.5 * score + 0.499 * doc.getPageRank() + 0.001 * doc.getNumViews();
           
           ScoredDocument d = new ScoredDocument(doc,score);
           rankQueue.add(d);

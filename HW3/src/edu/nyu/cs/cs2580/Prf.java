@@ -51,7 +51,7 @@ public class Prf {
 		ArrayList<String> terms = new ArrayList<String>(termFrequency.keySet());
 		for (String term : terms) {
 			double freq = (double) termFrequency.get(term) / (double) docsTotalTermFrequency;
-			if (freq > 0.01) {
+			if (freq > 0.005) {
 				//System.out.println(term + ", " + freq);
 				termFrequency.remove(term);
 				stopwords++;
