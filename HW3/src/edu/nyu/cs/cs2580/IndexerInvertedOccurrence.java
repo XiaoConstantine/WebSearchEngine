@@ -498,14 +498,14 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable {
         doc.setUrl(fileName);
         doc.setTitle(fileName);
         //System.out.print("before pg and nv");
-        double pg = 0.0;
-        if (pagerankValues.get(fileName) != null) pg = pagerankValues.get(fileName);
+        //double pg = 0.0;
+        //if (pagerankValues.get(fileName) != null) pg = pagerankValues.get(fileName);
        // System.out.println(", " + pg);
-        int nv = 0;
-        if (numViewValues.get(fileName) != null) nv= numViewValues.get(fileName);
+        //int nv = 0;
+       // if (numViewValues.get(fileName) != null) nv= numViewValues.get(fileName);
       //  System.out.println(", " + nv);
-        doc.setPageRank((float)pg);
-        doc.setNumViews(nv);
+        //doc.setPageRank((float)pg);
+        //doc.setNumViews(nv);
         
         
         //phrase title
